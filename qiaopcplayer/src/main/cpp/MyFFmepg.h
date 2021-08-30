@@ -20,9 +20,9 @@ public:
     pthread_t decodeThread;
     AVFormatContext *pFormatCtx = NULL;
     MyAudio *audio = NULL;
-
+    Playstatus *playstatus = NULL;
 public:
-    MyFFmepg(CallJava *callJava, const char* url);
+    MyFFmepg(Playstatus *playstatus, CallJava *callJava, const char* url);
     ~MyFFmepg();
     void prepared();
     void decodeFFmpegThread();

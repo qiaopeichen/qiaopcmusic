@@ -4,10 +4,10 @@
 
 #include "MyFFmepg.h"
 
-MyFFmepg::MyFFmepg(CallJava *callJava, const char *url) {
+MyFFmepg::MyFFmepg(Playstatus *playstatus, CallJava *callJava, const char *url) {
     this->callJava = callJava;
     this->url = url;
-
+    this->playstatus = playstatus;
 }
 
 void *decodeFFmpeg(void *data) {
@@ -39,7 +39,7 @@ void MyFFmepg::decodeFFmpegThread() {
     for (int i = 0; i < pFormatCtx->nb_streams; i++) {
         if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) { //得到音频流
             if (audio == NULL) {
-                audio = new MyAudio();
+                audio = new MyAudio(playstatus);
                 audio->streamIndex = i; //设置索引
                 audio->codecpar = pFormatCtx->streams[i]->codecpar;
             }
@@ -94,6 +94,8 @@ void MyFFmepg::start() {
                 if (LOG_DEBUG) {
                     LOGE("解码第 %d 帧", count);
                 }
+                audio->queue->putAvpacket(avPacket);
+            } else {
                 av_packet_free(&avPacket);
                 av_free(avPacket);
                 avPacket = NULL;
@@ -104,5 +106,17 @@ void MyFFmepg::start() {
             avPacket = NULL;
             break;
         }
+    }
+
+    //模拟出队
+    while (audio->queue->getQueueSize() > 0) {
+        AVPacket *avPacket = av_packet_alloc();
+        audio->queue->getAvpacket(avPacket);
+        av_packet_free(&avPacket);
+        av_free(avPacket);
+        avPacket = NULL;
+    }
+    if (LOG_DEBUG) {
+        LOGD("解码完成");
     }
 }

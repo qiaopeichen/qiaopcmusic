@@ -11,6 +11,7 @@ extern "C"
 JavaVM *javaVM = NULL;
 CallJava *callJava = NULL;
 MyFFmepg *fFmepg = NULL;
+Playstatus *playstatus = NULL;
 
 extern "C"
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
@@ -34,7 +35,8 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1prepared(JNIEnv *env, jobje
         if (callJava == NULL) {
             callJava = new CallJava(javaVM, env, &instance);
         }
-        fFmepg = new MyFFmepg(callJava, source);
+        playstatus = new Playstatus();
+        fFmepg = new MyFFmepg(playstatus, callJava, source);
         fFmepg->prepared();
     }
 
