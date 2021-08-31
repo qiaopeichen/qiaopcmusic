@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void begin(View view) {
         qiaopcPlayer.setSource("http://mpge.5nd.com/2015/2015-11-26/69708/1.mp3");
+//        qiaopcPlayer.setSource("/mnt/shared/Other/Warriors.mp3");
         qiaopcPlayer.prepared();
     }
 }

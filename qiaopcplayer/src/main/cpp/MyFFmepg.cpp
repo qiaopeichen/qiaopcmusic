@@ -98,8 +98,11 @@ void MyFFmepg::start() {
         }
         return;
     }
+
+    audio->play();
+
     int count = 0;
-    while (1) {
+    while (playstatus != NULL && !playstatus->exit) {
         AVPacket *avPacket = av_packet_alloc(); //AVPacket是存储压缩编码数据相关信息的结构体
         if (av_read_frame(pFormatCtx, avPacket) == 0) {//av_read_frame()获取视频的一帧，不存在半帧说法。
             //            av_read_frame
@@ -131,7 +134,14 @@ void MyFFmepg::start() {
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
-            break;
+            while (playstatus != NULL && !playstatus->exit) {
+                if (audio->queue->getQueueSize() > 0) {
+                    continue;
+                } else {
+                    playstatus->exit = true;
+                    break;
+                }
+            }
         }
     }
 

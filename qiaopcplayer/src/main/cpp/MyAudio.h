@@ -9,7 +9,7 @@
 #include "Playstatus.h"
 extern "C" {
 #include <libavcodec/avcodec.h>
-
+#include <libswresample/swresample.h>
 };
 
 class MyAudio {
@@ -19,9 +19,19 @@ public:
     AVCodecContext *avCodecContext = NULL; //关于编解码的结构体
     MyQueue *queue = NULL;
     Playstatus *playstatus = NULL;
+
+    pthread_t thread_play;
+    AVPacket *avPacket = NULL;
+    AVFrame *avFrame = NULL;
+    int ret = -1;
+    uint8_t *buffer = NULL;
+    int data_size = NULL;
 public:
     MyAudio(Playstatus *playstatus);
     ~MyAudio();
+
+    void play();
+    int resampleAudio();
 };
 
 
