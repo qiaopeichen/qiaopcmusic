@@ -15,8 +15,8 @@ extern "C" {
 class MyAudio {
 public:
     int streamIndex = -1;
-    AVCodecParameters *codecpar = NULL;
-    AVCodecContext *avCodecContext = NULL;
+    AVCodecParameters *codecpar = NULL; // 包含音视频参数的结构体。很重要，可以用来获取音视频参数中的宽度、高度、采样率、编码格式等信息。
+    AVCodecContext *avCodecContext = NULL; //关于编解码的结构体
     MyQueue *queue = NULL;
     Playstatus *playstatus = NULL;
 public:
