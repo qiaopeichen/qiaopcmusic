@@ -90,6 +90,7 @@ void MyFFmepg::decodeFFmpegThread() {
     callJava->onCallPrepared(CHILD_THREAD);
 }
 
+//回调java层onprepared之后，开始start
 void MyFFmepg::start() {
     if (audio == NULL) {
         if (LOG_DEBUG) {
@@ -99,9 +100,23 @@ void MyFFmepg::start() {
     }
     int count = 0;
     while (1) {
-        AVPacket *avPacket = av_packet_alloc();
-        if (av_read_frame(pFormatCtx, avPacket) == 0) {
+        AVPacket *avPacket = av_packet_alloc(); //AVPacket是存储压缩编码数据相关信息的结构体
+        if (av_read_frame(pFormatCtx, avPacket) == 0) {//av_read_frame()获取视频的一帧，不存在半帧说法。
+            //            av_read_frame
+            //            返回流的下一帧。
+            //            *此函数返回存储在文件中的内容，但不验证解码器是否有有效帧。
+            //            它将把文件中存储的内容拆分为帧，并为每个调用返回一个帧。
+            //            它不会省略有效帧之间的无效数据，以便给解码器最大可能的解码信息。
+            //            如果pkt->buf为NULL，那么直到下一个av_read_frame()或直到avformat_close_input()，包都是有效的。
+            //            否则数据包将无限期有效。在这两种情况下，当不再需要包时，必须使用av_free_packet释放包。
+            //            对于视频，数据包只包含一帧。
+            //            对于音频，如果每个帧具有已知的固定大小(例如PCM或ADPCM数据)，则它包含整数帧数。
+            //            如果音频帧有一个可变的大小(例如MPEG音频)，那么它包含一帧。
+            //            在AVStream中，pkt->pts、pkt->dts和pkt->持续时间总是被设置为恰当的值。
+            //            time_base单元(猜测格式是否不能提供它们)。
+            //            如果视频格式为B-frames，pkt->pts可以是AV_NOPTS_VALUE，所以如果不解压缩有效负载，最好依赖pkt->dts。
             if (avPacket->stream_index == audio->streamIndex) {
+                //stream_index：标识该AVPacket所属的视频/音频流。
                 count++;
                 if (LOG_DEBUG) {
                     LOGE("解码第 %d 帧", count);
