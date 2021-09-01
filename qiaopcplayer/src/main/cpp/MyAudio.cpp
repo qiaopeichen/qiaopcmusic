@@ -4,11 +4,12 @@
 
 #include "MyAudio.h"
 
-MyAudio::MyAudio(Playstatus *playstatus, int sample_rate) {
+MyAudio::MyAudio(Playstatus *playstatus, int sample_rate, CallJava *callJava) {
+    this->callJava = callJava;
     this->playstatus = playstatus;
     this->sample_rate = sample_rate;
     queue = new MyQueue(playstatus);
-    buffer = (uint8_t *) av_malloc(44100 * 2 * 2);
+    buffer = (uint8_t *) av_malloc(sample_rate * 2 * 2);//采样率*声道数*位数大小（16/8）
 }
 
 MyAudio::~MyAudio() {
@@ -32,6 +33,20 @@ void MyAudio::play() {
 //实现重采样
 int MyAudio::resampleAudio() {
     while (playstatus != NULL && !playstatus->exit) {
+
+        if (queue->getQueueSize() == 0) {
+            if (!playstatus->load) {
+                playstatus->load = true;
+                callJava->onCallLoad(CHILD_THREAD, true);
+            }
+            continue;
+        } else {
+            if (playstatus->load) {
+                playstatus->load = false;
+                callJava->onCallLoad(CHILD_THREAD, false);
+            }
+        }
+
         avPacket = av_packet_alloc();
         if (queue->getAvpacket(avPacket) != 0) {
             av_packet_free(&avPacket);
@@ -91,9 +106,9 @@ int MyAudio::resampleAudio() {
             // 数据个数 * 声道数（2） * 采样位数（16/8）
             data_size = nb * out_channels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
 //            fwrite(buffer, 1, data_size, outFile);
-            if (LOG_DEBUG) {
-                LOGE("data size is %d", data_size);
-            }
+//            if (LOG_DEBUG) {
+//                LOGE("data size is %d", data_size);
+//            }
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
@@ -229,4 +244,16 @@ int MyAudio::getCurrentSampleRateForOpensles(int sample_rate) {
             rate =  SL_SAMPLINGRATE_44_1;
     }
     return rate;
+}
+
+void MyAudio::pause() {
+    if(pcmPlayerObject != NULL) {
+        (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_PAUSED);
+    }
+}
+
+void MyAudio::resume() {
+    if(pcmPlayerObject != NULL) {
+        (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_PLAYING);
+    }
 }

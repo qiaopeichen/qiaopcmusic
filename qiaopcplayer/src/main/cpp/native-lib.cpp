@@ -49,4 +49,16 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1start(JNIEnv *env, jobject 
     if (fFmepg != NULL) {
         fFmepg->start();
     }
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1pause(JNIEnv *env, jobject instance) {
+    if(fFmepg != NULL) {
+        fFmepg->pause();
+    }
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1resume(JNIEnv *env, jobject instance) {
+    if(fFmepg != NULL) {
+        fFmepg->resume();
+    }
 }

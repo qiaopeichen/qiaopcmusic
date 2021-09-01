@@ -21,11 +21,14 @@ public:
     jobject jobj;
 
     jmethodID jmid_prepared;
+    jmethodID jmid_load;
 public:
     CallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj);
     ~CallJava();
 
     void onCallPrepared(int type);
+
+    void onCallLoad(int type, bool load);
 };
 
 

@@ -7,6 +7,7 @@
 
 #include "MyQueue.h"
 #include "Playstatus.h"
+#include "CallJava.h"
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 
@@ -22,6 +23,7 @@ public:
     AVCodecContext *avCodecContext = NULL; //关于编解码的结构体
     MyQueue *queue = NULL;
     Playstatus *playstatus = NULL;
+    CallJava *callJava = NULL;
 
     pthread_t thread_play;
     AVPacket *avPacket = NULL;
@@ -49,13 +51,16 @@ public:
 
 
 public:
-    MyAudio(Playstatus *playstatus, int sample_rate);
+    MyAudio(Playstatus *playstatus, int sample_rate, CallJava *callJava);
     ~MyAudio();
 
     void play();
     int resampleAudio();
     void initOpenSLES();
     int getCurrentSampleRateForOpensles(int sample_rate);
+
+    void pause();
+    void resume();
 };
 
 

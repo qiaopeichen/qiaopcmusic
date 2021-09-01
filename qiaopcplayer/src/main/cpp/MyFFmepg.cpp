@@ -51,7 +51,7 @@ void MyFFmepg::decodeFFmpegThread() {
     for (int i = 0; i < pFormatCtx->nb_streams; i++) { //pFormatCtx->streams 是一个 AVStream 指针的数组，里面包含了媒体资源的每一路流信息，数组的大小为 pFormatCtx->nb_streams
         if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) { //得到音频流
             if (audio == NULL) {
-                audio = new MyAudio(playstatus, pFormatCtx->streams[i]->codecpar->sample_rate);
+                audio = new MyAudio(playstatus, pFormatCtx->streams[i]->codecpar->sample_rate, callJava);
                 audio->streamIndex = i; //设置索引
                 audio->codecpar = pFormatCtx->streams[i]->codecpar;
             }
@@ -101,7 +101,6 @@ void MyFFmepg::start() {
 
     audio->play();
 
-    int count = 0;
     while (playstatus != NULL && !playstatus->exit) {
         AVPacket *avPacket = av_packet_alloc(); //AVPacket是存储压缩编码数据相关信息的结构体
         if (av_read_frame(pFormatCtx, avPacket) == 0) {//av_read_frame()获取视频的一帧，不存在半帧说法。
@@ -120,10 +119,6 @@ void MyFFmepg::start() {
             //            如果视频格式为B-frames，pkt->pts可以是AV_NOPTS_VALUE，所以如果不解压缩有效负载，最好依赖pkt->dts。
             if (avPacket->stream_index == audio->streamIndex) {
                 //stream_index：标识该AVPacket所属的视频/音频流。
-                count++;
-                if (LOG_DEBUG) {
-                    LOGE("解码第 %d 帧", count);
-                }
                 audio->queue->putAvpacket(avPacket);
             } else {
                 av_packet_free(&avPacket);
@@ -155,5 +150,17 @@ void MyFFmepg::start() {
     }
     if (LOG_DEBUG) {
         LOGD("解码完成");
+    }
+}
+
+void MyFFmepg::pause() {
+    if (audio != NULL) {
+        audio->pause();
+    }
+}
+
+void MyFFmepg::resume() {
+    if (audio != NULL) {
+        audio->resume();
     }
 }

@@ -2,6 +2,8 @@ package com.example.qiaopcplayer.player;
 
 import android.text.TextUtils;
 
+import com.example.qiaopcplayer.listener.OnLoadListener;
+import com.example.qiaopcplayer.listener.OnPauseResumeListener;
 import com.example.qiaopcplayer.listener.OnPreparedListener;
 import com.example.qiaopcplayer.log.MyLog;
 
@@ -22,6 +24,8 @@ public class QiaopcPlayer {
     private String source;
 
     private OnPreparedListener onPreparedListener;
+    private OnLoadListener onLoadListener;
+    private OnPauseResumeListener onPauseResumeListener;
 
     public void setSource(String source) {
         this.source = source;
@@ -29,6 +33,14 @@ public class QiaopcPlayer {
 
     public void setOnPreparedListener(OnPreparedListener onPreparedListener) {
         this.onPreparedListener = onPreparedListener;
+    }
+
+    public void setOnLoadListener(OnLoadListener onLoadListener) {
+        this.onLoadListener = onLoadListener;
+    }
+
+    public void setOnPauseResumeListener(OnPauseResumeListener onPauseResumeListener) {
+        this.onPauseResumeListener = onPauseResumeListener;
     }
 
     public QiaopcPlayer() {
@@ -41,6 +53,7 @@ public class QiaopcPlayer {
             return;
         }
 
+        onCallLoad(true);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -68,6 +81,27 @@ public class QiaopcPlayer {
         }).start();
     }
 
-    public native void n_prepared(String source);
-    public native void n_start();
+    public void pause() {
+        n_pause();
+        if(onPauseResumeListener != null) {
+            onPauseResumeListener.onPause(true);
+        }
+    }
+
+    public void resume() {
+        n_resume();
+        if(onPauseResumeListener != null) {
+            onPauseResumeListener.onPause(false);
+        }
+    }
+
+    public void onCallLoad(boolean load) {
+        if (onLoadListener != null) {
+            onLoadListener.onLoad(load);
+        }
+    }
+    private native void n_prepared(String source);
+    private native void n_start();
+    private native void n_pause();
+    private native void n_resume();
 }
