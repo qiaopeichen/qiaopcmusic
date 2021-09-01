@@ -33,6 +33,12 @@ public:
     int data_size = NULL;
     int sample_rate = 0; //采样率
 
+    int duration = 0; //播放时长
+    AVRational time_base; //这个流的每一帧，持续的时间的分数表达式
+    double now_time = 0;
+    double clock = 0; //记录当前时间，递增
+    double last_time = 0;
+
     //引擎接口
     SLObjectItf engineObject = NULL;
     SLEngineItf engineEngine = NULL;

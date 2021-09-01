@@ -109,6 +109,13 @@ int MyAudio::resampleAudio() {
 //            if (LOG_DEBUG) {
 //                LOGE("data size is %d", data_size);
 //            }
+            now_time = avFrame->pts * av_q2d(time_base); //多少帧 * 每帧的时间
+
+            if (now_time < clock) {
+                now_time = clock;
+            }
+            clock = now_time;
+
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
@@ -137,6 +144,13 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * context) {
     if(audio != NULL) {
         int buffersize = audio->resampleAudio();
         if (buffersize > 0) {
+            audio->clock += buffersize / (double)(audio->sample_rate * 2 * 2); //加上这一帧播放的时间
+
+            if (audio->clock - audio->last_time >= 0.1) {
+                audio->last_time = audio->clock;
+                audio->callJava->onCallTimeInfo(CHILD_THREAD, audio->clock, audio->duration);
+            }
+
             (*audio->pcmBufferQueue)->Enqueue(audio->pcmBufferQueue, audio->buffer, buffersize);
         }
     }

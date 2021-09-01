@@ -2,9 +2,11 @@ package com.example.qiaopcplayer.player;
 
 import android.text.TextUtils;
 
+import com.example.qiaopcplayer.TimeInfoBean;
 import com.example.qiaopcplayer.listener.OnLoadListener;
 import com.example.qiaopcplayer.listener.OnPauseResumeListener;
 import com.example.qiaopcplayer.listener.OnPreparedListener;
+import com.example.qiaopcplayer.listener.OnTimeInfoListener;
 import com.example.qiaopcplayer.log.MyLog;
 
 public class QiaopcPlayer {
@@ -26,6 +28,8 @@ public class QiaopcPlayer {
     private OnPreparedListener onPreparedListener;
     private OnLoadListener onLoadListener;
     private OnPauseResumeListener onPauseResumeListener;
+    private OnTimeInfoListener onTimeInfoListener;
+    private static TimeInfoBean timeInfoBean;
 
     public void setSource(String source) {
         this.source = source;
@@ -41,6 +45,10 @@ public class QiaopcPlayer {
 
     public void setOnPauseResumeListener(OnPauseResumeListener onPauseResumeListener) {
         this.onPauseResumeListener = onPauseResumeListener;
+    }
+
+    public void setOnTimeInfoListener(OnTimeInfoListener onTimeInfoListener) {
+        this.onTimeInfoListener = onTimeInfoListener;
     }
 
     public QiaopcPlayer() {
@@ -100,6 +108,18 @@ public class QiaopcPlayer {
             onLoadListener.onLoad(load);
         }
     }
+
+    public void onCallTimeInfo(int currentTime, int totalTime) {
+        if (onTimeInfoListener != null) {
+            if (timeInfoBean == null) {
+                timeInfoBean = new TimeInfoBean();
+            }
+            timeInfoBean.setCurrentTime(currentTime);
+            timeInfoBean.setTotalTime(totalTime);
+            onTimeInfoListener.onTimeInfo(timeInfoBean);
+        }
+    }
+
     private native void n_prepared(String source);
     private native void n_start();
     private native void n_pause();

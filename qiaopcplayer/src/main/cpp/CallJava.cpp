@@ -22,6 +22,7 @@ CallJava::CallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
 
     jmid_prepared = env->GetMethodID(jlz, "onCallPrepared", "()V");//获取Java层被回调的函数
     jmid_load = env->GetMethodID(jlz, "onCallLoad", "(Z)V");
+    jmid_timeinfo = env->GetMethodID(jlz, "onCallTimeInfo", "(II)V");
 }
 
 void CallJava::onCallPrepared(int type) {
@@ -52,6 +53,22 @@ void CallJava::onCallLoad(int type, bool load) {
             return;
         }
         jniEnv->CallVoidMethod(jobj, jmid_load, load);
+        javaVM->DetachCurrentThread();
+    }
+}
+
+void CallJava::onCallTimeInfo(int type, int curr, int total) {
+    if (type == MAIN_THREAD) {
+        jniEnv->CallVoidMethod(jobj, jmid_timeinfo, curr, total);
+    } else if (type == CHILD_THREAD) {
+        JNIEnv *jniEnv;
+        if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) { //从全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
+            if (LOG_DEBUG) {
+                LOGE("get child thread jnienv wrong");
+            }
+            return;
+        }
+        jniEnv->CallVoidMethod(jobj, jmid_timeinfo, curr, total);
         javaVM->DetachCurrentThread();
     }
 }
