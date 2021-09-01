@@ -51,7 +51,7 @@ void MyFFmepg::decodeFFmpegThread() {
     for (int i = 0; i < pFormatCtx->nb_streams; i++) { //pFormatCtx->streams 是一个 AVStream 指针的数组，里面包含了媒体资源的每一路流信息，数组的大小为 pFormatCtx->nb_streams
         if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) { //得到音频流
             if (audio == NULL) {
-                audio = new MyAudio(playstatus);
+                audio = new MyAudio(playstatus, pFormatCtx->streams[i]->codecpar->sample_rate);
                 audio->streamIndex = i; //设置索引
                 audio->codecpar = pFormatCtx->streams[i]->codecpar;
             }

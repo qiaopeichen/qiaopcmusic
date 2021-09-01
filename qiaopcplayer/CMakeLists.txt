@@ -80,4 +80,6 @@ target_link_libraries( # Specifies the target library.
         swscale-4
         # Links the target library to the log library
         # included in the NDK.
+
+        OpenSLES #opensles库，在ndk开发包里就有
         log)

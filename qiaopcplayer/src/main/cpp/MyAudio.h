@@ -7,6 +7,9 @@
 
 #include "MyQueue.h"
 #include "Playstatus.h"
+#include <SLES/OpenSLES.h>
+#include <SLES/OpenSLES_Android.h>
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libswresample/swresample.h>
@@ -26,12 +29,33 @@ public:
     int ret = -1;
     uint8_t *buffer = NULL;
     int data_size = NULL;
+    int sample_rate = 0; //采样率
+
+    //引擎接口
+    SLObjectItf engineObject = NULL;
+    SLEngineItf engineEngine = NULL;
+
+    //混音器
+    SLObjectItf outputMixObject = NULL;
+    SLEnvironmentalReverbItf outputMixEnvironmentalReverb = NULL;
+    SLEnvironmentalReverbSettings reverbSettings = SL_I3DL2_ENVIRONMENT_PRESET_STONECORRIDOR; //石廊混音？
+
+    //pcm
+    SLObjectItf  pcmPlayerObject = NULL;
+    SLPlayItf pcmPlayerPlay = NULL;
+
+    //缓冲器队列接口
+    SLAndroidSimpleBufferQueueItf  pcmBufferQueue = NULL;
+
+
 public:
-    MyAudio(Playstatus *playstatus);
+    MyAudio(Playstatus *playstatus, int sample_rate);
     ~MyAudio();
 
     void play();
     int resampleAudio();
+    void initOpenSLES();
+    int getCurrentSampleRateForOpensles(int sample_rate);
 };
 
 
