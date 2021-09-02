@@ -3,6 +3,7 @@ package com.example.qiaopcplayer.player;
 import android.text.TextUtils;
 
 import com.example.qiaopcplayer.TimeInfoBean;
+import com.example.qiaopcplayer.listener.OnErrorListener;
 import com.example.qiaopcplayer.listener.OnLoadListener;
 import com.example.qiaopcplayer.listener.OnPauseResumeListener;
 import com.example.qiaopcplayer.listener.OnPreparedListener;
@@ -29,6 +30,7 @@ public class QiaopcPlayer {
     private OnLoadListener onLoadListener;
     private OnPauseResumeListener onPauseResumeListener;
     private OnTimeInfoListener onTimeInfoListener;
+    private OnErrorListener onErrorListener;
     private static TimeInfoBean timeInfoBean;
 
     public void setSource(String source) {
@@ -51,6 +53,10 @@ public class QiaopcPlayer {
         this.onTimeInfoListener = onTimeInfoListener;
     }
 
+    public void setOnErrorListener(OnErrorListener onErrorListener) {
+        this.onErrorListener = onErrorListener;
+    }
+
     public QiaopcPlayer() {
 
     }
@@ -61,7 +67,6 @@ public class QiaopcPlayer {
             return;
         }
 
-        onCallLoad(true);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -126,6 +131,13 @@ public class QiaopcPlayer {
             timeInfoBean.setCurrentTime(currentTime);
             timeInfoBean.setTotalTime(totalTime);
             onTimeInfoListener.onTimeInfo(timeInfoBean);
+        }
+    }
+
+    public void onCallError(int code, String msg) {
+        stop();
+        if (onErrorListener != null) {
+            onErrorListener.onError(code, msg);
         }
     }
 

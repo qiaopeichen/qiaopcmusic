@@ -50,6 +50,7 @@ void MyFFmepg::decodeFFmpegThread() {
     if (avformat_open_input(&pFormatCtx, url, NULL, NULL) != 0) { //该函数用于打开多媒体数据并且获得一些相关的信息。它的声明位于libavformat\avformat.h
         if (LOG_DEBUG) {
             LOGE("can not open url: %s", url);
+            callJava->CallError(CHILD_THREAD, 1001,"can not open url");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -61,6 +62,7 @@ void MyFFmepg::decodeFFmpegThread() {
         //逻辑文件位置不被此函数更改; 读出来的包会被缓存起来供以后处理。
         if (LOG_DEBUG) {
             LOGE("can not find streams from url: %s", url);
+            callJava->CallError(CHILD_THREAD, 1002,"can not find streams from url");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -82,6 +84,7 @@ void MyFFmepg::decodeFFmpegThread() {
     if (!dec) {
         if (LOG_DEBUG) {
             LOGE("can not find decoder");
+            callJava->CallError(CHILD_THREAD, 1003,"can not find decoder");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -91,6 +94,7 @@ void MyFFmepg::decodeFFmpegThread() {
     if (!audio->avCodecContext) {
         if (LOG_DEBUG) {
             LOGE("can not alloc new decoderctx");
+            callJava->CallError(CHILD_THREAD, 1004,"can not alloc new decoderctx");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -101,6 +105,7 @@ void MyFFmepg::decodeFFmpegThread() {
     if (avcodec_parameters_to_context(audio->avCodecContext, audio->codecpar) < 0) {
         if (LOG_DEBUG) {
             LOGE("can not find decoderctx");
+            callJava->CallError(CHILD_THREAD, 1005,"can not find decoderctx");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -109,6 +114,7 @@ void MyFFmepg::decodeFFmpegThread() {
     if (avcodec_open2(audio->avCodecContext, dec, 0) != 0) { //avcodec_open2 该函数用于初始化一个视音频编解码器的AVCodecContext
         if (LOG_DEBUG) {
             LOGE("can not open audio streams");
+            callJava->CallError(CHILD_THREAD, 1006,"can not open audio streams");
         }
         exit = true;
         pthread_mutex_unlock(&init_mutex);
@@ -124,6 +130,7 @@ void MyFFmepg::start() {
     if (audio == NULL) {
         if (LOG_DEBUG) {
             LOGE("audio is null");
+            callJava->CallError(CHILD_THREAD, 1007,"audio is null");
         }
         return;
     }
@@ -200,6 +207,7 @@ void MyFFmepg::release() {
         }
         if(LOG_DEBUG) {
             LOGE("wait ffmpeg exit %d", sleepCount);
+            callJava->CallError(CHILD_THREAD, 1008,"wait ffmpeg exit");
         }
         sleepCount++;
         av_usleep(10 * 1000);//睡眠10毫秒

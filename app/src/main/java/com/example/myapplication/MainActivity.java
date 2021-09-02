@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.example.qiaopcplayer.Demo;
 import com.example.qiaopcplayer.TimeInfoBean;
+import com.example.qiaopcplayer.listener.OnErrorListener;
 import com.example.qiaopcplayer.listener.OnLoadListener;
 import com.example.qiaopcplayer.listener.OnPauseResumeListener;
 import com.example.qiaopcplayer.listener.OnPreparedListener;
@@ -67,6 +68,12 @@ public class MainActivity extends AppCompatActivity {
                 message.what = 1;
                 message.obj = timeInfoBean;
                 handler.sendMessage(message);
+            }
+        });
+        qiaopcPlayer.setOnErrorListener(new OnErrorListener() {
+            @Override
+            public void onError(int code, String msg) {
+                MyLog.d("error code = " + code + ", msg = " + msg);
             }
         });
     }

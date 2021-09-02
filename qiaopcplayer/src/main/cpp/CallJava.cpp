@@ -23,6 +23,7 @@ CallJava::CallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_prepared = env->GetMethodID(jlz, "onCallPrepared", "()V");//获取Java层被回调的函数
     jmid_load = env->GetMethodID(jlz, "onCallLoad", "(Z)V");
     jmid_timeinfo = env->GetMethodID(jlz, "onCallTimeInfo", "(II)V");
+    jmid_error = env->GetMethodID(jlz, "onCallError", "(ILjava/lang/String;)V");
 }
 
 void CallJava::onCallPrepared(int type) {
@@ -75,4 +76,24 @@ void CallJava::onCallTimeInfo(int type, int curr, int total) {
 
 CallJava::~CallJava() {
 
+}
+
+void CallJava::CallError(int type, int code, char *msg) {
+    if (type == MAIN_THREAD) {
+        jstring jmsg = jniEnv->NewStringUTF(msg);
+        jniEnv->CallVoidMethod(jobj, jmid_error, code, jmsg);
+        jniEnv->DeleteLocalRef(jmsg); //释放内存
+    } else if (type == CHILD_THREAD) {
+        JNIEnv *jniEnv;
+        if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) { //从全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
+            if (LOG_DEBUG) {
+                LOGE("get child thread jnienv wrong");
+            }
+            return;
+        }
+        jstring jmsg = jniEnv->NewStringUTF(msg);
+        jniEnv->CallVoidMethod(jobj, jmid_error, code, jmsg);
+        jniEnv->DeleteLocalRef(jmsg); //释放内存
+        javaVM->DetachCurrentThread();
+    }
 }

@@ -12,6 +12,7 @@ JavaVM *javaVM = NULL;
 CallJava *callJava = NULL;
 MyFFmepg *fFmepg = NULL;
 Playstatus *playstatus = NULL;
+bool nexit = true;
 
 extern "C"
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {// 在加载动态链接库的时候，JVM会调用JNI_OnLoad(JavaVM* jvm, void* reserved)（如果定义了该函数）。
@@ -35,6 +36,7 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1prepared(JNIEnv *env, jobje
         if (callJava == NULL) {
             callJava = new CallJava(javaVM, env, &instance);
         }
+        callJava->onCallLoad(MAIN_THREAD, true);
         playstatus = new Playstatus();
         fFmepg = new MyFFmepg(playstatus, callJava, source); // 把Java层被回调的函数传入FFmepg类中
         fFmepg->prepared();
@@ -64,6 +66,11 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1resume(JNIEnv *env, jobject
 JNIEXPORT void JNICALL
 Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1stop(JNIEnv *env, jobject instance) {
 
+    if (!nexit) {
+        return;
+    }
+    nexit = false;
+
     if (fFmepg != NULL) {
         fFmepg->release();
         delete(fFmepg);
@@ -77,4 +84,5 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1stop(JNIEnv *env, jobject i
             playstatus = NULL;
         }
     }
+    nexit = true;
 }
