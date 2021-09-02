@@ -11,6 +11,7 @@ MyQueue::MyQueue(Playstatus *playstatus) {
 }
 
 MyQueue::~MyQueue() {
+    clearAvpacket();
     pthread_mutex_destroy(&mutexPacket);
     pthread_cond_destroy(&condPacket);
 }
@@ -56,4 +57,19 @@ int MyQueue::getQueueSize() {
     size = queuePacket.size();
     pthread_mutex_unlock(&mutexPacket);
     return size;
+}
+
+void MyQueue::clearAvpacket() {
+    pthread_cond_signal(&condPacket);//发送信号量
+    pthread_mutex_lock(&mutexPacket);
+
+    while (!queuePacket.empty()) {
+        AVPacket *packet = queuePacket.front();
+        queuePacket.pop();
+        av_packet_free(&packet);
+        av_free(packet);
+        packet = NULL;
+    }
+
+    pthread_mutex_unlock(&mutexPacket);
 }

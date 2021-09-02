@@ -103,6 +103,15 @@ public class QiaopcPlayer {
         }
     }
 
+    public void stop() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                n_stop();
+            }
+        }).start();
+    }
+
     public void onCallLoad(boolean load) {
         if (onLoadListener != null) {
             onLoadListener.onLoad(load);
@@ -124,4 +133,5 @@ public class QiaopcPlayer {
     private native void n_start();
     private native void n_pause();
     private native void n_resume();
+    private native void n_stop();
 }

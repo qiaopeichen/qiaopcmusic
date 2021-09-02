@@ -72,3 +72,7 @@ void CallJava::onCallTimeInfo(int type, int curr, int total) {
         javaVM->DetachCurrentThread();
     }
 }
+
+CallJava::~CallJava() {
+
+}

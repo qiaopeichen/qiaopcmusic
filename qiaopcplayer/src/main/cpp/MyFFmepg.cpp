@@ -8,6 +8,7 @@ MyFFmepg::MyFFmepg(Playstatus *playstatus, CallJava *callJava, const char *url) 
     this->callJava = callJava;
     this->url = url;
     this->playstatus = playstatus;
+    pthread_mutex_init(&init_mutex, NULL);
 }
 
 void *decodeFFmpeg(void *data) {
@@ -29,14 +30,29 @@ void MyFFmepg::prepared() {
     pthread_create(&decodeThread, NULL, decodeFFmpeg, this);//它的功能是创建线程（实际上就是确定调用该线程函数的入口点），在线程创建以后，就开始运行相关的线程函数。
 }
 
+int avformat_callback(void *ctx) {
+    MyFFmepg *fFmepg = static_cast<MyFFmepg *>(ctx);
+    if (fFmepg->playstatus->exit) {
+        return AVERROR_EOF; //end of file 达到文件末尾，结束执行
+    }
+    return 0;
+}
+
 void MyFFmepg::decodeFFmpegThread() {
+    pthread_mutex_lock(&init_mutex);
     av_register_all(); // 注册解码器
     avformat_network_init(); //网络初始化
     pFormatCtx = avformat_alloc_context(); // 上下文初始化
+    //设置超时回调,有些不存在的地址或者网络不好的情况下要卡很久
+    pFormatCtx->interrupt_callback.callback = avformat_callback; //callback
+    pFormatCtx->interrupt_callback.opaque = this; // callback的参数
+
     if (avformat_open_input(&pFormatCtx, url, NULL, NULL) != 0) { //该函数用于打开多媒体数据并且获得一些相关的信息。它的声明位于libavformat\avformat.h
         if (LOG_DEBUG) {
             LOGE("can not open url: %s", url);
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
         return;
     }
     if (avformat_find_stream_info(pFormatCtx, NULL) < 0) {
@@ -46,6 +62,8 @@ void MyFFmepg::decodeFFmpegThread() {
         if (LOG_DEBUG) {
             LOGE("can not find streams from url: %s", url);
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
         return;
     }
     for (int i = 0; i < pFormatCtx->nb_streams; i++) { //pFormatCtx->streams 是一个 AVStream 指针的数组，里面包含了媒体资源的每一路流信息，数组的大小为 pFormatCtx->nb_streams
@@ -65,6 +83,8 @@ void MyFFmepg::decodeFFmpegThread() {
         if (LOG_DEBUG) {
             LOGE("can not find decoder");
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
         return;
     }
     audio->avCodecContext = avcodec_alloc_context3(dec);//分配解码器
@@ -72,6 +92,8 @@ void MyFFmepg::decodeFFmpegThread() {
         if (LOG_DEBUG) {
             LOGE("can not alloc new decoderctx");
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
         return;
     }
 
@@ -80,16 +102,21 @@ void MyFFmepg::decodeFFmpegThread() {
         if (LOG_DEBUG) {
             LOGE("can not find decoderctx");
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
         return;
     }
     if (avcodec_open2(audio->avCodecContext, dec, 0) != 0) { //avcodec_open2 该函数用于初始化一个视音频编解码器的AVCodecContext
         if (LOG_DEBUG) {
             LOGE("can not open audio streams");
         }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
         return;
     }
     //回调java层
     callJava->onCallPrepared(CHILD_THREAD);
+    pthread_mutex_unlock(&init_mutex);
 }
 
 //回调java层onprepared之后，开始start
@@ -141,15 +168,7 @@ void MyFFmepg::start() {
             }
         }
     }
-
-    //模拟出队
-    while (audio->queue->getQueueSize() > 0) {
-        AVPacket *avPacket = av_packet_alloc();
-        audio->queue->getAvpacket(avPacket);
-        av_packet_free(&avPacket);
-        av_free(avPacket);
-        avPacket = NULL;
-    }
+    exit = true;
     if (LOG_DEBUG) {
         LOGD("解码完成");
     }
@@ -165,4 +184,50 @@ void MyFFmepg::resume() {
     if (audio != NULL) {
         audio->resume();
     }
+}
+
+void MyFFmepg::release() {
+    if (playstatus->exit) {
+        return;
+    }
+    playstatus->exit = true;
+    pthread_mutex_lock(&init_mutex);
+
+    int sleepCount = 0;
+    while (!exit) {
+        if (sleepCount > 1000) {
+            exit = true;
+        }
+        if(LOG_DEBUG) {
+            LOGE("wait ffmpeg exit %d", sleepCount);
+        }
+        sleepCount++;
+        av_usleep(10 * 1000);//睡眠10毫秒
+    }
+
+    if (audio != NULL) {
+        audio->release();
+        delete(audio);
+        audio = NULL;
+    }
+
+    if (pFormatCtx != NULL) {
+        avformat_close_input(&pFormatCtx);
+        avformat_free_context(pFormatCtx);
+        pFormatCtx = NULL;
+    }
+
+    if (playstatus != NULL) {
+        playstatus = NULL;
+    }
+
+    if (callJava != NULL) {
+        callJava = NULL;
+    }
+
+    pthread_mutex_unlock(&init_mutex);
+}
+
+MyFFmepg::~MyFFmepg() {
+
 }

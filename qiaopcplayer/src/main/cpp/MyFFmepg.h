@@ -11,6 +11,7 @@
 extern "C"
 {
 #include "libavformat/avformat.h"
+#include <libavutil/time.h>
 };
 
 class MyFFmepg {
@@ -21,6 +22,9 @@ public:
     AVFormatContext *pFormatCtx = NULL;
     MyAudio *audio = NULL;
     Playstatus *playstatus = NULL;
+
+    pthread_mutex_t init_mutex;
+    bool exit = false;
 public:
     MyFFmepg(Playstatus *playstatus, CallJava *callJava, const char* url);
     ~MyFFmepg();
@@ -31,6 +35,7 @@ public:
 
     void pause();
     void resume();
+    void release();
 };
 
 

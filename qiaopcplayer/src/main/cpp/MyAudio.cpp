@@ -271,3 +271,54 @@ void MyAudio::resume() {
         (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_PLAYING);
     }
 }
+
+void MyAudio::stop() {
+    if(pcmPlayerObject != NULL) {
+        (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_STOPPED);
+    }
+}
+
+void MyAudio::release() {
+    stop();
+    if(queue != NULL) {
+        delete(queue); // delete时 会走析构函数
+        queue = NULL;
+    }
+
+    //释放 openSLES
+    if (pcmPlayerObject != NULL) {
+        (*pcmPlayerObject)->Destroy(pcmPlayerObject);
+        pcmPlayerObject = NULL;
+        pcmPlayerPlay = NULL;
+    }
+    if (outputMixObject != NULL) {
+        (*outputMixObject)->Destroy(outputMixObject);
+        outputMixObject = NULL;
+        outputMixEnvironmentalReverb = NULL;
+    }
+    if(engineObject != NULL) {
+        (*engineObject)->Destroy(engineObject);
+        engineObject = NULL;
+        engineEngine = NULL;
+    }
+
+    if (buffer != NULL) {
+        free(buffer);
+        buffer = NULL;
+    }
+
+    //解码器上下文释放
+    if (avCodecContext != NULL) {
+        avcodec_close(avCodecContext);
+        avcodec_free_context(&avCodecContext);
+        avCodecContext = NULL;
+    }
+
+    //只置空指针就行了 因为后面ffmepg还会用到
+    if (playstatus != NULL) {
+        playstatus = NULL;
+    }
+    if (callJava != NULL) {
+        callJava = NULL;
+    }
+}
