@@ -120,4 +120,8 @@ public class MainActivity extends AppCompatActivity {
     public void seek(View view) {
         qiaopcPlayer.seek(215);
     }
+
+    public void next(View view) {
+        qiaopcPlayer.playNext("http://ngcdn001.cnr.cn/live/zgzs/index.m3u8");
+    }
 }

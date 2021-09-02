@@ -80,6 +80,9 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1stop(JNIEnv *env, jobject i
     }
     nexit = false;
 
+    jclass jlz = env->GetObjectClass(instance);
+    jmethodID jmid_next = env->GetMethodID(jlz, "onCallNext", "()V");
+
     if (fFmepg != NULL) {
         fFmepg->release();
         delete(fFmepg);
@@ -94,6 +97,7 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1stop(JNIEnv *env, jobject i
         }
     }
     nexit = true;
+    env->CallVoidMethod(instance, jmid_next);
 }extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1seek(JNIEnv *env, jobject instance,

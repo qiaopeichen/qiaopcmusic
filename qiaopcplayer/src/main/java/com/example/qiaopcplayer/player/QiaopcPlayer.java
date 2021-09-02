@@ -25,7 +25,8 @@ public class QiaopcPlayer {
         System.loadLibrary("swscale-4");
     }
 
-    private String source;
+    private static String source;
+    private static boolean playNext = false;
 
     private OnPreparedListener onPreparedListener;
     private OnLoadListener onLoadListener;
@@ -128,6 +129,12 @@ public class QiaopcPlayer {
         n_seek(secds);
     }
 
+    public void playNext(String url) {
+        source = url;
+        playNext = true;
+        stop();
+    }
+
     public void onCallLoad(boolean load) {
         if (onLoadListener != null) {
             onLoadListener.onLoad(load);
@@ -156,6 +163,13 @@ public class QiaopcPlayer {
         stop();
         if (onCompleteListener != null) {
             onCompleteListener.onComplete();
+        }
+    }
+
+    public void onCallNext() {
+        if (playNext) {
+            playNext = false;
+            prepared();
         }
     }
 
