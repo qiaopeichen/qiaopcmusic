@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.example.qiaopcplayer.Demo;
 import com.example.qiaopcplayer.TimeInfoBean;
+import com.example.qiaopcplayer.listener.OnCompleteListener;
 import com.example.qiaopcplayer.listener.OnErrorListener;
 import com.example.qiaopcplayer.listener.OnLoadListener;
 import com.example.qiaopcplayer.listener.OnPauseResumeListener;
@@ -76,6 +77,12 @@ public class MainActivity extends AppCompatActivity {
                 MyLog.d("error code = " + code + ", msg = " + msg);
             }
         });
+        qiaopcPlayer.setOnCompleteListener(new OnCompleteListener() {
+            @Override
+            public void onComplete() {
+                MyLog.d("播放完成");
+            }
+        });
     }
 
 
@@ -108,5 +115,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void stop(View view) {
         qiaopcPlayer.stop();
+    }
+
+    public void seek(View view) {
+        qiaopcPlayer.seek(215);
     }
 }

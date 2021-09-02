@@ -9,6 +9,7 @@ MyFFmepg::MyFFmepg(Playstatus *playstatus, CallJava *callJava, const char *url) 
     this->url = url;
     this->playstatus = playstatus;
     pthread_mutex_init(&init_mutex, NULL);
+    pthread_mutex_init(&seek_mutex, NULL);
 }
 
 void *decodeFFmpeg(void *data) {
@@ -76,6 +77,7 @@ void MyFFmepg::decodeFFmpegThread() {
                 audio->codecpar = pFormatCtx->streams[i]->codecpar;
                 audio->duration = pFormatCtx->duration / AV_TIME_BASE;//时间基，理解为时间单位
                 audio->time_base = pFormatCtx->streams[i]->time_base;
+                duration = audio->duration;
             }
         }
     }
@@ -139,7 +141,19 @@ void MyFFmepg::start() {
 
     while (playstatus != NULL && !playstatus->exit) {
         AVPacket *avPacket = av_packet_alloc(); //AVPacket是存储压缩编码数据相关信息的结构体
-        if (av_read_frame(pFormatCtx, avPacket) == 0) {//av_read_frame()获取视频的一帧，不存在半帧说法。
+
+        if (playstatus->seek) {
+            continue;
+        }
+        if (audio->queue->getQueueSize() > 40) {
+            continue;
+        }
+
+        pthread_mutex_lock(&seek_mutex);
+        int ret = av_read_frame(pFormatCtx, avPacket);
+        pthread_mutex_unlock(&seek_mutex);
+
+        if (ret == 0) {//av_read_frame()获取视频的一帧，不存在半帧说法。
             //            av_read_frame
             //            返回流的下一帧。
             //            *此函数返回存储在文件中的内容，但不验证解码器是否有有效帧。
@@ -175,6 +189,9 @@ void MyFFmepg::start() {
             }
         }
     }
+    if (callJava != NULL) {
+        callJava->onCallComplete(CHILD_THREAD);
+    }
     exit = true;
     if (LOG_DEBUG) {
         LOGD("解码完成");
@@ -194,9 +211,12 @@ void MyFFmepg::resume() {
 }
 
 void MyFFmepg::release() {
-    if (playstatus->exit) {
-        return;
+    if (LOG_DEBUG) {
+        LOGE("开始释放ffmpeg");
     }
+//    if (playstatus->exit) {
+//        return;
+//    }
     playstatus->exit = true;
     pthread_mutex_lock(&init_mutex);
 
@@ -213,22 +233,32 @@ void MyFFmepg::release() {
         av_usleep(10 * 1000);//睡眠10毫秒
     }
 
+    if (LOG_DEBUG) {
+        LOGE("释放audio");
+    }
+
     if (audio != NULL) {
         audio->release();
         delete(audio);
         audio = NULL;
     }
-
+    if (LOG_DEBUG) {
+        LOGE("释放pFormatCtx");
+    }
     if (pFormatCtx != NULL) {
         avformat_close_input(&pFormatCtx);
         avformat_free_context(pFormatCtx);
         pFormatCtx = NULL;
     }
-
+    if (LOG_DEBUG) {
+        LOGE("释放playstatus");
+    }
     if (playstatus != NULL) {
         playstatus = NULL;
     }
-
+    if (LOG_DEBUG) {
+        LOGE("释放callJava");
+    }
     if (callJava != NULL) {
         callJava = NULL;
     }
@@ -237,5 +267,26 @@ void MyFFmepg::release() {
 }
 
 MyFFmepg::~MyFFmepg() {
+    pthread_mutex_destroy(&init_mutex);
+    pthread_mutex_destroy(&seek_mutex);
+}
 
+void MyFFmepg::seek(int64_t secds) {
+    if (duration <= 0) {
+        return;
+    }
+    if(secds >= 0 && secds <= duration) {
+        if (audio != NULL) {
+            playstatus->seek = true;
+            audio->queue->clearAvpacket();
+            audio->clock = 0;
+            audio->last_time = 0;
+            pthread_mutex_lock(&seek_mutex);
+
+            int64_t rel = secds * AV_TIME_BASE; //真实时间 = 秒数 * 时间基
+            avformat_seek_file(pFormatCtx, -1, INT64_MIN, rel, INT64_MAX, 0); // -1为全部音频文件
+            pthread_mutex_unlock(&seek_mutex);
+            playstatus->seek = false;
+        }
+    }
 }

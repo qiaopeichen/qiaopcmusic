@@ -3,6 +3,7 @@ package com.example.qiaopcplayer.player;
 import android.text.TextUtils;
 
 import com.example.qiaopcplayer.TimeInfoBean;
+import com.example.qiaopcplayer.listener.OnCompleteListener;
 import com.example.qiaopcplayer.listener.OnErrorListener;
 import com.example.qiaopcplayer.listener.OnLoadListener;
 import com.example.qiaopcplayer.listener.OnPauseResumeListener;
@@ -31,6 +32,7 @@ public class QiaopcPlayer {
     private OnPauseResumeListener onPauseResumeListener;
     private OnTimeInfoListener onTimeInfoListener;
     private OnErrorListener onErrorListener;
+    private OnCompleteListener onCompleteListener;
     private static TimeInfoBean timeInfoBean;
 
     public void setSource(String source) {
@@ -55,6 +57,10 @@ public class QiaopcPlayer {
 
     public void setOnErrorListener(OnErrorListener onErrorListener) {
         this.onErrorListener = onErrorListener;
+    }
+
+    public void setOnCompleteListener(OnCompleteListener onCompleteListener) {
+        this.onCompleteListener = onCompleteListener;
     }
 
     public QiaopcPlayer() {
@@ -118,6 +124,10 @@ public class QiaopcPlayer {
         }).start();
     }
 
+    public void seek(int secds) {
+        n_seek(secds);
+    }
+
     public void onCallLoad(boolean load) {
         if (onLoadListener != null) {
             onLoadListener.onLoad(load);
@@ -142,9 +152,17 @@ public class QiaopcPlayer {
         }
     }
 
+    public void onCallComplete() {
+        stop();
+        if (onCompleteListener != null) {
+            onCompleteListener.onComplete();
+        }
+    }
+
     private native void n_prepared(String source);
     private native void n_start();
     private native void n_pause();
     private native void n_resume();
     private native void n_stop();
+    private native void n_seek(int secds);
 }

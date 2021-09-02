@@ -12,6 +12,7 @@ JavaVM *javaVM = NULL;
 CallJava *callJava = NULL;
 MyFFmepg *fFmepg = NULL;
 Playstatus *playstatus = NULL;
+pthread_t thread_start;
 bool nexit = true;
 
 extern "C"
@@ -43,12 +44,20 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1prepared(JNIEnv *env, jobje
     }
 
 //    env->ReleaseStringUTFChars(source_, source);
-}extern "C"
+}
+
+void *startCallBack(void *data) {
+    MyFFmepg *fFmepg = static_cast<MyFFmepg *>(data);
+    fFmepg->start();
+    pthread_exit(&thread_start);
+}
+
+extern "C"
 JNIEXPORT void JNICALL
 Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1start(JNIEnv *env, jobject instance) {
 
     if (fFmepg != NULL) {
-        fFmepg->start();
+        pthread_create(&thread_start, NULL, startCallBack,fFmepg);
     }
 }extern "C"
 JNIEXPORT void JNICALL
@@ -85,4 +94,12 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1stop(JNIEnv *env, jobject i
         }
     }
     nexit = true;
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1seek(JNIEnv *env, jobject instance,
+                                                          jint secds) {
+    if (fFmepg != NULL) {
+        fFmepg->seek(secds);
+    }
+
 }

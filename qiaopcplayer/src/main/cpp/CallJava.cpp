@@ -24,6 +24,7 @@ CallJava::CallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_load = env->GetMethodID(jlz, "onCallLoad", "(Z)V");
     jmid_timeinfo = env->GetMethodID(jlz, "onCallTimeInfo", "(II)V");
     jmid_error = env->GetMethodID(jlz, "onCallError", "(ILjava/lang/String;)V");
+    jmid_complete = env->GetMethodID(jlz, "onCallComplete", "()V");
 }
 
 void CallJava::onCallPrepared(int type) {
@@ -63,7 +64,7 @@ void CallJava::onCallTimeInfo(int type, int curr, int total) {
         jniEnv->CallVoidMethod(jobj, jmid_timeinfo, curr, total);
     } else if (type == CHILD_THREAD) {
         JNIEnv *jniEnv;
-        if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) { //从全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
+        if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) { //从AttachCurrentThread全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
             if (LOG_DEBUG) {
                 LOGE("get child thread jnienv wrong");
             }
@@ -106,6 +107,30 @@ void CallJava::CallError(int type, int code, char *msg) {
             //调用DetachCurrentThread函数的地方在java线程中，
             // 即在java调用C++代码时在C++代码中调用了AttachCurrentThread方法来获取JNIEnv，
             // 此时JNIEnv已经通过参数传递进来，你不需要再次AttachCurrentThread来获取。在释放时就会报错。
+            javaVM->DetachCurrentThread();
+        }
+    }
+}
+
+void CallJava::onCallComplete(int type) {
+    if (type == MAIN_THREAD) {
+        jniEnv->CallVoidMethod(jobj, jmid_complete);
+    } else if (type == CHILD_THREAD) {
+        JNIEnv *jniEnv;
+        int status;
+        bool isAttached = false;
+        status = javaVM->GetEnv((void**)&jniEnv, JNI_VERSION_1_4);
+        if (status < 0) {
+            if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) { //从全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
+                if (LOG_DEBUG) {
+                    LOGE("get child thread jnienv wrong");
+                }
+                return;
+            }
+            isAttached = true;
+        }
+        jniEnv->CallVoidMethod(jobj, jmid_complete);
+        if (isAttached){
             javaVM->DetachCurrentThread();
         }
     }

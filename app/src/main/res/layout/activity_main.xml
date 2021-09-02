@@ -13,6 +13,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <Button
+        android:text="停止"
+        android:onClick="stop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <Button
         android:text="暂停"
         android:onClick="pause"
         android:layout_width="match_parent"
@@ -23,10 +28,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <Button
-        android:text="停止"
-        android:onClick="stop"
+        android:text="seek"
+        android:onClick="seek"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
     <TextView
         android:id="@+id/tv_time"
         android:text="00:00/00:00"
