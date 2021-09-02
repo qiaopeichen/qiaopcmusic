@@ -140,7 +140,6 @@ void MyFFmepg::start() {
     audio->play();
 
     while (playstatus != NULL && !playstatus->exit) {
-        AVPacket *avPacket = av_packet_alloc(); //AVPacket是存储压缩编码数据相关信息的结构体
 
         if (playstatus->seek) {
             continue;
@@ -148,7 +147,7 @@ void MyFFmepg::start() {
         if (audio->queue->getQueueSize() > 40) {
             continue;
         }
-
+        AVPacket *avPacket = av_packet_alloc(); //AVPacket是存储压缩编码数据相关信息的结构体
         pthread_mutex_lock(&seek_mutex);
         int ret = av_read_frame(pFormatCtx, avPacket);
         pthread_mutex_unlock(&seek_mutex);
