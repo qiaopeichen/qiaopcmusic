@@ -85,15 +85,28 @@ void CallJava::CallError(int type, int code, char *msg) {
         jniEnv->DeleteLocalRef(jmsg); //释放内存
     } else if (type == CHILD_THREAD) {
         JNIEnv *jniEnv;
-        if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) { //从全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
-            if (LOG_DEBUG) {
-                LOGE("get child thread jnienv wrong");
+        int status;
+        bool isAttached = false;
+        status = javaVM->GetEnv((void**)&jniEnv, JNI_VERSION_1_4);
+        if (status < 0) {
+            if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) { //从全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
+                if (LOG_DEBUG) {
+                    LOGE("get child thread jnienv wrong");
+                }
+                return;
             }
-            return;
+            isAttached = true;
         }
+
         jstring jmsg = jniEnv->NewStringUTF(msg);
         jniEnv->CallVoidMethod(jobj, jmid_error, code, jmsg);
         jniEnv->DeleteLocalRef(jmsg); //释放内存
-        javaVM->DetachCurrentThread();
+
+        if (isAttached){
+            //调用DetachCurrentThread函数的地方在java线程中，
+            // 即在java调用C++代码时在C++代码中调用了AttachCurrentThread方法来获取JNIEnv，
+            // 此时JNIEnv已经通过参数传递进来，你不需要再次AttachCurrentThread来获取。在释放时就会报错。
+            javaVM->DetachCurrentThread();
+        }
     }
 }

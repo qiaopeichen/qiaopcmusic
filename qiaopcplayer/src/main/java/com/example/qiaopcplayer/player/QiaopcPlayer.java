@@ -109,6 +109,7 @@ public class QiaopcPlayer {
     }
 
     public void stop() {
+        timeInfoBean = null;
         new Thread(new Runnable() {
             @Override
             public void run() {
