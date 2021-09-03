@@ -37,7 +37,7 @@ android {
     }
     externalNativeBuild {
         cmake {
-            path file('CMakeLists.txt')
+            path file('CMakeLists.txt') //不同版本的AS，写法不一样，老版本path "CMakeLists.txt"，新版本AS可能会引发cmake编译期报错
         }
     }
 
