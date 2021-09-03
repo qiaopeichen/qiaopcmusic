@@ -295,3 +295,9 @@ void MyFFmepg::setVolume(int percent) {
         audio->setVolume(percent);
     }
 }
+
+void MyFFmepg::setMute(int mute) {
+    if (audio != NULL) {
+        audio->setMute(mute);
+    }
+}

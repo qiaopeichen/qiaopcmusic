@@ -10,6 +10,7 @@ import com.example.qiaopcplayer.listener.OnPauseResumeListener;
 import com.example.qiaopcplayer.listener.OnPreparedListener;
 import com.example.qiaopcplayer.listener.OnTimeInfoListener;
 import com.example.qiaopcplayer.log.MyLog;
+import com.example.qiaopcplayer.muteenum.MuteEnum;
 
 public class QiaopcPlayer {
 
@@ -29,6 +30,7 @@ public class QiaopcPlayer {
     private static boolean playNext = false;
     private static int duration = -1;
     private static int volumePercent = 100;
+    private static MuteEnum muteEnum = MuteEnum.MUTE_CENTER;
     private OnPreparedListener onPreparedListener;
     private OnLoadListener onLoadListener;
     private OnPauseResumeListener onPauseResumeListener;
@@ -98,6 +100,7 @@ public class QiaopcPlayer {
             @Override
             public void run() {
                 setVolume(volumePercent);
+                setMute(muteEnum);
                 n_start();
             }
         }).start();
@@ -194,6 +197,11 @@ public class QiaopcPlayer {
         return volumePercent;
     }
 
+    public void setMute(MuteEnum mute) {
+        muteEnum = mute;
+        n_mute(mute.getValue());
+    }
+
     private native void n_prepared(String source);
     private native void n_start();
     private native void n_pause();
@@ -202,4 +210,5 @@ public class QiaopcPlayer {
     private native void n_seek(int secds);
     private native int n_duration();
     private native void n_volume(int percent);
+    private native void n_mute(int mute);
 }

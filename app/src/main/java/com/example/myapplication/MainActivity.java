@@ -19,6 +19,7 @@ import com.example.qiaopcplayer.listener.OnPauseResumeListener;
 import com.example.qiaopcplayer.listener.OnPreparedListener;
 import com.example.qiaopcplayer.listener.OnTimeInfoListener;
 import com.example.qiaopcplayer.log.MyLog;
+import com.example.qiaopcplayer.muteenum.MuteEnum;
 import com.example.qiaopcplayer.player.QiaopcPlayer;
 import com.example.qiaopcplayer.util.TimeUtil;
 
@@ -43,7 +44,8 @@ public class MainActivity extends AppCompatActivity {
         seekBarVolume = findViewById(R.id.seekbar_volume);
         tvVolume = findViewById(R.id.tv_volume);
         qiaopcPlayer = new QiaopcPlayer();
-        qiaopcPlayer. setVolume(50);
+        qiaopcPlayer.setVolume(70);
+        qiaopcPlayer.setMute(MuteEnum.MUTE_LEFT);
         tvVolume.setText("音量" + qiaopcPlayer.getVolumePercent() + "%");
         seekBarVolume.setProgress( qiaopcPlayer.getVolumePercent());
         qiaopcPlayer.setOnPreparedListener(new OnPreparedListener() {
@@ -176,5 +178,17 @@ public class MainActivity extends AppCompatActivity {
 
     public void next(View view) {
         qiaopcPlayer.playNext("http://ngcdn001.cnr.cn/live/zgzs/index.m3u8");
+    }
+
+    public void left(View view) {
+        qiaopcPlayer.setMute(MuteEnum.MUTE_LEFT);
+    }
+
+    public void right(View view) {
+        qiaopcPlayer.setMute(MuteEnum.MUTE_RIGHT);
+    }
+
+    public void center(View view) {
+        qiaopcPlayer.setMute(MuteEnum.MUTE_CENTER);
     }
 }

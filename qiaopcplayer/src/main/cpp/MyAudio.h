@@ -39,7 +39,7 @@ public:
     double clock = 0; //记录当前时间，递增
     double last_time = 0;
     int volumePercent = 100;
-
+    int mute = 2;
     //引擎接口
     SLObjectItf engineObject = NULL;
     SLEngineItf engineEngine = NULL;
@@ -53,6 +53,7 @@ public:
     SLObjectItf  pcmPlayerObject = NULL;
     SLPlayItf pcmPlayerPlay = NULL;
     SLVolumeItf pcmVolumePlay = NULL;
+    SLMuteSoloItf  pcmMutePlay = NULL;
     //缓冲器队列接口
     SLAndroidSimpleBufferQueueItf  pcmBufferQueue = NULL;
 
@@ -73,6 +74,8 @@ public:
     void release();
 
     void setVolume(int percent);
+
+    void setMute(int mute);
 };
 
 

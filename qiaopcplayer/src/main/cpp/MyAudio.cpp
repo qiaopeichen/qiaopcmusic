@@ -193,17 +193,19 @@ void MyAudio::initOpenSLES() {
     };
     SLDataSource slDataSource = {&android_queue, &pcm};
 
-    const SLInterfaceID  ids[3] = {SL_IID_BUFFERQUEUE, SL_IID_EFFECTSEND, SL_IID_VOLUME}; //opensl的inferface，需要的要写在里面，否则调用了也无效
-    const SLboolean  req[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+    const SLInterfaceID  ids[4] = {SL_IID_BUFFERQUEUE,SL_IID_EFFECTSEND, SL_IID_VOLUME, SL_IID_MUTESOLO}; //opensl的inferface，需要的要写在里面，否则调用了也无效
+    const SLboolean  req[4] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
 
-    (*engineEngine)->CreateAudioPlayer(engineEngine, &pcmPlayerObject, &slDataSource, &audioSnk, 3, ids, req);
+    (*engineEngine)->CreateAudioPlayer(engineEngine, &pcmPlayerObject, &slDataSource, &audioSnk, 4, ids, req);
     //初始化播放器
     (*pcmPlayerObject)->Realize(pcmPlayerObject, SL_BOOLEAN_FALSE);
     //得到接口后调用 获取Player接口
     (*pcmPlayerObject)->GetInterface(pcmPlayerObject, SL_IID_PLAY, &pcmPlayerPlay);
-
+    //获取声音接口
     (*pcmPlayerObject)->GetInterface(pcmPlayerObject, SL_IID_VOLUME, &pcmVolumePlay);
-
+    //获取声道接口
+    (*pcmPlayerObject)->GetInterface(pcmPlayerObject, SL_IID_MUTESOLO, &pcmMutePlay);
+    setMute(mute);
     //第四步 创建缓冲区和回调函数    注册回调缓冲区 获取缓冲队列接口
     (*pcmPlayerObject)->GetInterface(pcmPlayerObject, SL_IID_BUFFERQUEUE, &pcmBufferQueue);
     setVolume(volumePercent);
@@ -365,5 +367,29 @@ void MyAudio::setVolume(int percent) {
         else{
             (*pcmVolumePlay)->SetVolumeLevel(pcmVolumePlay, (100 - percent) * -100);
         }
+    }
+}
+
+void MyAudio::setMute(int mute) {
+    this->mute = mute;
+    LOGE("setMute-> %d", mute);
+    if (pcmMutePlay != NULL) {
+        if (mute == 0){
+            //右声道
+            LOGE("右声道");
+            (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 1, false);
+            (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 0, true);
+        } else if (mute == 1) {
+            //左声道
+            LOGE("左声道");
+            (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 1, true);
+            (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 0, false);
+        } else if (mute == 2) {
+            //立体声
+            (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 1, false);
+            (*pcmMutePlay)->SetChannelMute(pcmMutePlay, 0, false);
+        }
+    } else {
+        LOGE("pcmMutePlay == NULL");
     }
 }

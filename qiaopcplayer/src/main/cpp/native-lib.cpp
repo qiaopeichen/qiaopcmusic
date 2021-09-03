@@ -122,4 +122,11 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1volume(JNIEnv *env, jobject
     if (fFmepg != NULL) {
         fFmepg->setVolume(percent);
     }
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1mute(JNIEnv *env, jobject instance,
+                                                          jint mute) {
+    if (fFmepg != NULL) {
+        fFmepg->setMute(mute);
+    }
 }
