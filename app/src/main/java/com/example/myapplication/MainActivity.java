@@ -29,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private QiaopcPlayer qiaopcPlayer;
     private TextView tvTime;
     private SeekBar seekBarSeek;
+    private SeekBar seekBarVolume;
+    TextView tvVolume;
     private int position = 0; //0-100 seekbar  value
     private boolean isSeekBar = false;
 
@@ -38,7 +40,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         tvTime = findViewById(R.id.tv_time);
         seekBarSeek = findViewById(R.id.seekbar_seek);
+        seekBarVolume = findViewById(R.id.seekbar_volume);
+        tvVolume = findViewById(R.id.tv_volume);
         qiaopcPlayer = new QiaopcPlayer();
+        qiaopcPlayer. setVolume(50);
+        tvVolume.setText("音量" + qiaopcPlayer.getVolumePercent() + "%");
+        seekBarVolume.setProgress( qiaopcPlayer.getVolumePercent());
         qiaopcPlayer.setOnPreparedListener(new OnPreparedListener() {
             @Override
             public void onPrerared() {
@@ -106,6 +113,24 @@ public class MainActivity extends AppCompatActivity {
             public void onStopTrackingTouch(SeekBar seekBar) {
                 qiaopcPlayer.seek(position);
                 isSeekBar = false;
+            }
+        });
+
+        seekBarVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                qiaopcPlayer.setVolume(progress);
+                tvVolume.setText("音量" + qiaopcPlayer.getVolumePercent() + "%");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
             }
         });
     }

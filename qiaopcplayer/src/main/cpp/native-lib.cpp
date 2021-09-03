@@ -114,4 +114,12 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1duration(JNIEnv *env, jobje
         return fFmepg->duration;
     }
     return 0;
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1volume(JNIEnv *env, jobject instance,
+                                                            jint percent) {
+
+    if (fFmepg != NULL) {
+        fFmepg->setVolume(percent);
+    }
 }

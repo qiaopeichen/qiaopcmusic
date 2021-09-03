@@ -289,3 +289,9 @@ void MyFFmepg::seek(int64_t secds) {
         }
     }
 }
+
+void MyFFmepg::setVolume(int percent) {
+    if (audio != NULL) {
+        audio->setVolume(percent);
+    }
+}
