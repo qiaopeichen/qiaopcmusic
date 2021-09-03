@@ -107,3 +107,11 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1seek(JNIEnv *env, jobject i
     }
 
 }
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1duration(JNIEnv *env, jobject instance) {
+    if(fFmepg != NULL) {
+        return fFmepg->duration;
+    }
+    return 0;
+}

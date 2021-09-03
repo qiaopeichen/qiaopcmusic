@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.example.qiaopcplayer.Demo;
@@ -27,12 +28,16 @@ public class MainActivity extends AppCompatActivity {
 
     private QiaopcPlayer qiaopcPlayer;
     private TextView tvTime;
+    private SeekBar seekBarSeek;
+    private int position = 0; //0-100 seekbar  value
+    private boolean isSeekBar = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         tvTime = findViewById(R.id.tv_time);
+        seekBarSeek = findViewById(R.id.seekbar_seek);
         qiaopcPlayer = new QiaopcPlayer();
         qiaopcPlayer.setOnPreparedListener(new OnPreparedListener() {
             @Override
@@ -83,6 +88,26 @@ public class MainActivity extends AppCompatActivity {
                 MyLog.d("播放完成");
             }
         });
+
+        seekBarSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (qiaopcPlayer.getDuration() > 0 && isSeekBar) {
+                    position = qiaopcPlayer.getDuration() * progress / 100;
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isSeekBar = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                qiaopcPlayer.seek(position);
+                isSeekBar = false;
+            }
+        });
     }
 
 
@@ -101,14 +126,17 @@ public class MainActivity extends AppCompatActivity {
         qiaopcPlayer.resume();
     }
 
-    Handler handler = new Handler(){
+    Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            if (msg.what == 1)  {
-                TimeInfoBean timeInfoBean = (TimeInfoBean) msg.obj;
-                tvTime.setText(TimeUtil.secdsToDateFormat(timeInfoBean.getCurrentTime(), timeInfoBean.getTotalTime())
-                + "/" + TimeUtil.secdsToDateFormat(timeInfoBean.getTotalTime(), timeInfoBean.getTotalTime()));
+            if (msg.what == 1) {
+                if (!isSeekBar) {
+                    TimeInfoBean timeInfoBean = (TimeInfoBean) msg.obj;
+                    tvTime.setText(TimeUtil.secdsToDateFormat(timeInfoBean.getCurrentTime(), timeInfoBean.getTotalTime())
+                            + "/" + TimeUtil.secdsToDateFormat(timeInfoBean.getTotalTime(), timeInfoBean.getTotalTime()));
+                    seekBarSeek.setProgress(timeInfoBean.getCurrentTime() * 100 / timeInfoBean.getTotalTime());
+                }
             }
         }
     };

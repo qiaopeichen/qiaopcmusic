@@ -27,7 +27,7 @@ public class QiaopcPlayer {
 
     private static String source;
     private static boolean playNext = false;
-
+    private static int duration = -1;
     private OnPreparedListener onPreparedListener;
     private OnLoadListener onLoadListener;
     private OnPauseResumeListener onPauseResumeListener;
@@ -117,6 +117,7 @@ public class QiaopcPlayer {
 
     public void stop() {
         timeInfoBean = null;
+        duration = -1;
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -173,10 +174,18 @@ public class QiaopcPlayer {
         }
     }
 
+    public int getDuration() {
+        if (duration < 0) {
+            duration = n_duration();
+        }
+        return duration;
+    }
+
     private native void n_prepared(String source);
     private native void n_start();
     private native void n_pause();
     private native void n_resume();
     private native void n_stop();
     private native void n_seek(int secds);
+    private native int n_duration();
 }
