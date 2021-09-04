@@ -301,3 +301,15 @@ void MyFFmepg::setMute(int mute) {
         audio->setMute(mute);
     }
 }
+
+void MyFFmepg::setPitch(float pitch) {
+    if (audio != NULL) {
+        audio->setPitch(pitch);
+    }
+}
+
+void MyFFmepg::setSpeed(float speed) {
+    if (audio != NULL) {
+        audio->setSpeed(speed);
+    }
+}

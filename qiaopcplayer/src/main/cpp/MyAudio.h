@@ -11,6 +11,9 @@
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 
+#include "SoundTouch.h" //soundTouch库
+using namespace soundtouch;
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libswresample/swresample.h>
@@ -40,6 +43,9 @@ public:
     double last_time = 0;
     int volumePercent = 100;
     int mute = 2;
+
+    float pitch = 1.0f;
+    float speed = 1.0f;
     //引擎接口
     SLObjectItf engineObject = NULL;
     SLEngineItf engineEngine = NULL;
@@ -57,13 +63,29 @@ public:
     //缓冲器队列接口
     SLAndroidSimpleBufferQueueItf  pcmBufferQueue = NULL;
 
+    //SoundTouch
+    SoundTouch *soundTouch = NULL;
+    SAMPLETYPE *sampleBuffer = NULL;
+    bool finished = true;
+    uint8_t *out_buffer = NULL;
+    // 源码：typedef	unsigned char		__uint8_t;
+    //而 *_t是typedef定义的表示标志，是结构的一种标注。即我们所看到的 uint8_t、uint16_t、uint32_t都不是新的数据类型，而是通过typedef给类型起得别名。（如C语言中没有bool类型，有的程序员用int表示，有的用short表示，则利用统一的定义来表示bool，是比较好的。typedef char bool）。
+    //
+    //
+    //  则很明显的看出：uint8_t是用1个字节表示的；uint16_t是用2个字节表示的；uint32_t是用4个字节表示的。
+    // uint8_t实际上就是一个char，所以输出 uint8_t类型的变量实际上输出对应的字符
+    //————————————————
+    //版权声明：本文为CSDN博主「时光机ﾟ」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+    //原文链接：https://blog.csdn.net/qq_19784349/article/details/82927169
+    int nb = 0;
+    int num = 0;//返回的采样个数
 
 public:
     MyAudio(Playstatus *playstatus, int sample_rate, CallJava *callJava);
     ~MyAudio();
 
     void play();
-    int resampleAudio();
+    int resampleAudio(void **pcmbuf);
     void initOpenSLES();
     int getCurrentSampleRateForOpensles(int sample_rate);
 
@@ -76,6 +98,12 @@ public:
     void setVolume(int percent);
 
     void setMute(int mute);
+
+    int getSoundTouchData();
+
+    void setPitch(float pitch);
+
+    void setSpeed(float speed);
 };
 
 

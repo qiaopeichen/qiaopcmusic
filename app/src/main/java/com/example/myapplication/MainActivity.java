@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
         tvVolume = findViewById(R.id.tv_volume);
         qiaopcPlayer = new QiaopcPlayer();
         qiaopcPlayer.setVolume(70);
+        qiaopcPlayer.setPitch(1.5f);
+        qiaopcPlayer.setSpeed(1.5f);
         qiaopcPlayer.setMute(MuteEnum.MUTE_LEFT);
         tvVolume.setText("音量" + qiaopcPlayer.getVolumePercent() + "%");
         seekBarVolume.setProgress( qiaopcPlayer.getVolumePercent());
@@ -190,5 +192,25 @@ public class MainActivity extends AppCompatActivity {
 
     public void center(View view) {
         qiaopcPlayer.setMute(MuteEnum.MUTE_CENTER);
+    }
+
+    public void speed(View view) {
+        qiaopcPlayer.setSpeed(1.5f);
+        qiaopcPlayer.setPitch(1.0f);
+    }
+
+    public void pitch(View view) {
+        qiaopcPlayer.setSpeed(1.0f);
+        qiaopcPlayer.setPitch(1.5f);
+    }
+
+    public void speedpitch(View view) {
+        qiaopcPlayer.setSpeed(1.5f);
+        qiaopcPlayer.setPitch(1.5f);
+    }
+
+    public void normal(View view) {
+        qiaopcPlayer.setSpeed(1.0f);
+        qiaopcPlayer.setPitch(1.0f);
     }
 }

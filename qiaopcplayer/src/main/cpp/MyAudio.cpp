@@ -10,6 +10,13 @@ MyAudio::MyAudio(Playstatus *playstatus, int sample_rate, CallJava *callJava) {
     this->sample_rate = sample_rate;
     queue = new MyQueue(playstatus);
     buffer = (uint8_t *) av_malloc(sample_rate * 2 * 2);//采样率*声道数*位数大小（16/8）
+
+    sampleBuffer = static_cast<SAMPLETYPE *>(malloc(sample_rate * 2 * 2)); //采样率 * 声道数 * 位数大小
+    soundTouch = new SoundTouch();
+    soundTouch->setSampleRate(sample_rate);
+    soundTouch->setChannels(2);
+    soundTouch->setPitch(pitch); //设置音调
+    soundTouch->setTempo(speed); //设置音速
 }
 
 MyAudio::~MyAudio() {
@@ -31,7 +38,7 @@ void MyAudio::play() {
 //FILE *outFile = fopen("/storage/emulated/0/Download/mymusic.pcm", "w");
 
 //实现重采样
-int MyAudio::resampleAudio() {
+int MyAudio::resampleAudio(void **pcmbuf) {
     while (playstatus != NULL && !playstatus->exit) {
 
         if (queue->getQueueSize() == 0) {
@@ -94,7 +101,7 @@ int MyAudio::resampleAudio() {
                 continue;
             }
 
-            int nb = swr_convert(
+            nb = swr_convert(
                     swr_ctx,
                     &buffer, //输出数据
                     avFrame->nb_samples, //输出采样个数
@@ -115,7 +122,7 @@ int MyAudio::resampleAudio() {
                 now_time = clock;
             }
             clock = now_time;
-
+            *pcmbuf = buffer;
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
@@ -139,10 +146,46 @@ int MyAudio::resampleAudio() {
     return data_size;
 }
 
+
+int MyAudio::getSoundTouchData() {
+    //循环获取
+    while (playstatus != NULL && !playstatus->exit) {
+        out_buffer = NULL;
+        if (finished) {
+            finished = false;
+            data_size = resampleAudio(reinterpret_cast<void **>(&out_buffer));
+            if (data_size > 0) {
+                //因为soundtouch需要16位，所以这里8位转成16位
+                for (int i = 0; i < data_size / 2 + 1; i++) {
+                    sampleBuffer[i] = (out_buffer[i * 2] | (out_buffer[i * 2 + 1]) << 8);
+                }
+                soundTouch->putSamples(sampleBuffer, nb);
+                num = soundTouch->receiveSamples(sampleBuffer, data_size /4); // 为什么要/4 11:52  因为返回的是采样个数，要除以2（双声道）再除以2（采样位数16字节 = 2位）
+            } else {
+                soundTouch->flush();
+            }
+        }
+        if (num == 0) {
+            finished = true;
+            continue;
+        } else {
+            if (out_buffer == NULL) {
+                num = soundTouch->receiveSamples(sampleBuffer, data_size /4);
+                if (num == 0) {
+                    finished = true;
+                    continue;
+                }
+            }
+            return num;
+        }
+    }
+    return 0;
+}
+
 void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * context) {
     MyAudio *audio = static_cast<MyAudio *>(context);
     if(audio != NULL) {
-        int buffersize = audio->resampleAudio();
+        int buffersize = audio->getSoundTouchData(); // 返回的采样个数，sample个数
         if (buffersize > 0) {
             audio->clock += buffersize / (double)(audio->sample_rate * 2 * 2); //加上这一帧播放的时间
 
@@ -151,7 +194,7 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * context) {
                 audio->callJava->onCallTimeInfo(CHILD_THREAD, audio->clock, audio->duration);
             }
 
-            (*audio->pcmBufferQueue)->Enqueue(audio->pcmBufferQueue, audio->buffer, buffersize);
+            (*audio->pcmBufferQueue)->Enqueue(audio->pcmBufferQueue, audio->sampleBuffer, buffersize * 2 * 2);// buffersize * 2 * 2  sample个数 * 16字节=2位 * 双声道
         }
     }
 }
@@ -391,5 +434,19 @@ void MyAudio::setMute(int mute) {
         }
     } else {
         LOGE("pcmMutePlay == NULL");
+    }
+}
+
+void MyAudio::setPitch(float pitch) {
+    this->pitch = pitch;
+    if (soundTouch != NULL) {
+        soundTouch->setPitch(pitch);
+    }
+}
+
+void MyAudio::setSpeed(float speed) {
+    this->speed = speed;
+    if (soundTouch != NULL) {
+        soundTouch->setTempo(speed);
     }
 }

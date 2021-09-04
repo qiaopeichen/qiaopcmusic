@@ -30,6 +30,8 @@ public class QiaopcPlayer {
     private static boolean playNext = false;
     private static int duration = -1;
     private static int volumePercent = 100;
+    private static float speed = 1.0f;
+    private static float pitch = 1.0f;
     private static MuteEnum muteEnum = MuteEnum.MUTE_CENTER;
     private OnPreparedListener onPreparedListener;
     private OnLoadListener onLoadListener;
@@ -101,6 +103,8 @@ public class QiaopcPlayer {
             public void run() {
                 setVolume(volumePercent);
                 setMute(muteEnum);
+                setSpeed(speed);
+                setPitch(pitch);
                 n_start();
             }
         }).start();
@@ -202,6 +206,16 @@ public class QiaopcPlayer {
         n_mute(mute.getValue());
     }
 
+    public void setPitch(float p) {
+        pitch = p;
+        n_pitch(pitch);
+    }
+
+    public void setSpeed(float s) {
+        speed = s;
+        n_speed(speed);
+    }
+
     private native void n_prepared(String source);
     private native void n_start();
     private native void n_pause();
@@ -211,4 +225,6 @@ public class QiaopcPlayer {
     private native int n_duration();
     private native void n_volume(int percent);
     private native void n_mute(int mute);
+    private native void n_pitch(float pitch);
+    private native void n_speed(float speed);
 }

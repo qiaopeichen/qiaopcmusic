@@ -129,4 +129,18 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1mute(JNIEnv *env, jobject i
     if (fFmepg != NULL) {
         fFmepg->setMute(mute);
     }
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1pitch(JNIEnv *env, jobject instance,
+                                                           jfloat pitch) {
+    if (fFmepg != NULL) {
+        fFmepg->setPitch(pitch);
+    }
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1speed(JNIEnv *env, jobject instance,
+                                                           jfloat speed) {
+    if (fFmepg != NULL) {
+        fFmepg->setSpeed(speed);
+    }
 }
