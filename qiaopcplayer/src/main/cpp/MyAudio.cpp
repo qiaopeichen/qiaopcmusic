@@ -193,7 +193,8 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * context) {
                 audio->last_time = audio->clock;
                 audio->callJava->onCallTimeInfo(CHILD_THREAD, audio->clock, audio->duration);
             }
-
+            audio->callJava->onCallValumeDB(CHILD_THREAD, audio->getPCMDB(
+                    reinterpret_cast<char *>(audio->sampleBuffer), buffersize * 4));
             (*audio->pcmBufferQueue)->Enqueue(audio->pcmBufferQueue, audio->sampleBuffer, buffersize * 2 * 2);// buffersize * 2 * 2  sample个数 * 16字节=2位 * 双声道
         }
     }
@@ -449,4 +450,20 @@ void MyAudio::setSpeed(float speed) {
     if (soundTouch != NULL) {
         soundTouch->setTempo(speed);
     }
+}
+
+int MyAudio::getPCMDB(char *pcmdata, size_t pcmsize) {
+    int db = 0; //db
+    short int pervalue = 0; //每一帧的16位的值
+    double sum = 0; //总的值 可能比较大
+    for (int i = 0; i <pcmsize; i += 2) {
+        memcpy(&pervalue, pcmdata + i, 2); //把每一次的值copy到pervalue里，每一次取2个char值 就是16位
+        sum += abs(pervalue); //全部16位的和
+    }
+    sum = sum / (pcmsize / 2); //除以 多少个16位 求平均值
+    if (sum > 0) {
+        db = (int)20.0 * log10(sum); //求分贝公式
+    }
+    //一段时间的分贝
+    return db;
 }

@@ -25,6 +25,7 @@ CallJava::CallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_timeinfo = env->GetMethodID(jlz, "onCallTimeInfo", "(II)V");
     jmid_error = env->GetMethodID(jlz, "onCallError", "(ILjava/lang/String;)V");
     jmid_complete = env->GetMethodID(jlz, "onCallComplete", "()V");
+    jmid_valumedb = env->GetMethodID(jlz, "onCallValumeDB", "(I)V");
 }
 
 void CallJava::onCallPrepared(int type) {
@@ -130,6 +131,30 @@ void CallJava::onCallComplete(int type) {
             isAttached = true;
         }
         jniEnv->CallVoidMethod(jobj, jmid_complete);
+        if (isAttached){
+            javaVM->DetachCurrentThread();
+        }
+    }
+}
+
+void CallJava::onCallValumeDB(int type, int db) {
+    if (type == MAIN_THREAD) {
+        jniEnv->CallVoidMethod(jobj, jmid_valumedb, db);
+    } else if (type == CHILD_THREAD) {
+        JNIEnv *jniEnv;
+        int status;
+        bool isAttached = false;
+        status = javaVM->GetEnv((void**)&jniEnv, JNI_VERSION_1_4);
+        if (status < 0) {
+            if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) { //从全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
+                if (LOG_DEBUG) {
+                    LOGE("get child thread jnienv wrong");
+                }
+                return;
+            }
+            isAttached = true;
+        }
+        jniEnv->CallVoidMethod(jobj, jmid_valumedb, db);
         if (isAttached){
             javaVM->DetachCurrentThread();
         }

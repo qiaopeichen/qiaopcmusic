@@ -18,6 +18,7 @@ import com.example.qiaopcplayer.listener.OnLoadListener;
 import com.example.qiaopcplayer.listener.OnPauseResumeListener;
 import com.example.qiaopcplayer.listener.OnPreparedListener;
 import com.example.qiaopcplayer.listener.OnTimeInfoListener;
+import com.example.qiaopcplayer.listener.OnValumeDBListener;
 import com.example.qiaopcplayer.log.MyLog;
 import com.example.qiaopcplayer.muteenum.MuteEnum;
 import com.example.qiaopcplayer.player.QiaopcPlayer;
@@ -97,6 +98,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onComplete() {
                 MyLog.d("播放完成");
+            }
+        });
+        qiaopcPlayer.setOnValumeDBListener(new OnValumeDBListener() {
+            @Override
+            public void onDBValue(int db) {
+                MyLog.d("当前分贝：" + db);
             }
         });
 

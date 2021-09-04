@@ -9,6 +9,7 @@ import com.example.qiaopcplayer.listener.OnLoadListener;
 import com.example.qiaopcplayer.listener.OnPauseResumeListener;
 import com.example.qiaopcplayer.listener.OnPreparedListener;
 import com.example.qiaopcplayer.listener.OnTimeInfoListener;
+import com.example.qiaopcplayer.listener.OnValumeDBListener;
 import com.example.qiaopcplayer.log.MyLog;
 import com.example.qiaopcplayer.muteenum.MuteEnum;
 
@@ -39,6 +40,7 @@ public class QiaopcPlayer {
     private OnTimeInfoListener onTimeInfoListener;
     private OnErrorListener onErrorListener;
     private OnCompleteListener onCompleteListener;
+    private OnValumeDBListener onValumeDBListener;
     private static TimeInfoBean timeInfoBean;
 
     public void setSource(String source) {
@@ -67,6 +69,10 @@ public class QiaopcPlayer {
 
     public void setOnCompleteListener(OnCompleteListener onCompleteListener) {
         this.onCompleteListener = onCompleteListener;
+    }
+
+    public void setOnValumeDBListener(OnValumeDBListener onValumeDBListener) {
+        this.onValumeDBListener = onValumeDBListener;
     }
 
     public QiaopcPlayer() {
@@ -214,6 +220,12 @@ public class QiaopcPlayer {
     public void setSpeed(float s) {
         speed = s;
         n_speed(speed);
+    }
+
+    public void onCallValumeDB(int db) {
+        if (onValumeDBListener != null) {
+            onValumeDBListener.onDBValue(db);
+        }
     }
 
     private native void n_prepared(String source);
