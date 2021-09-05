@@ -331,7 +331,7 @@ void MyAudio::initOpenSLES() {
     pcmBufferCallBack(pcmBufferQueue, this);
 }
 
-int MyAudio::getCurrentSampleRateForOpensles(int sample_rate) {
+SLuint32 MyAudio::getCurrentSampleRateForOpensles(int sample_rate) {
 
     //#define SL_SAMPLINGRATE_8		((SLuint32) 8000000)
     //#define SL_SAMPLINGRATE_11_025	((SLuint32) 11025000)
@@ -346,54 +346,37 @@ int MyAudio::getCurrentSampleRateForOpensles(int sample_rate) {
     //#define SL_SAMPLINGRATE_88_2	((SLuint32) 88200000)
     //#define SL_SAMPLINGRATE_96		((SLuint32) 96000000)
     //#define SL_SAMPLINGRATE_192	((SLuint32) 192000000)
-    int rate = 0;
-    switch (sample_rate)
-    {
+    switch (sample_rate) {
         case 8000:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_8;
         case 11025:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_11_025;
         case 12000:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_12;
         case 16000:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_16;
         case 22050:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_22_05;
         case 24000:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_24;
         case 32000:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_32;
         case 44100:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_44_1;
         case 48000:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_48;
         case 64000:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_64;
         case 88200:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_88_2;
         case 96000:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_96;
         case 192000:
-            rate = rate * 1000;
-            break;
+            return SL_SAMPLINGRATE_192;
         default:
-            rate = 44100000;
+            return SL_SAMPLINGRATE_44_1;
     }
-    return rate;
 }
-
 void MyAudio::pause() {
     if(pcmPlayerObject != NULL) {
         (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_PAUSED);
