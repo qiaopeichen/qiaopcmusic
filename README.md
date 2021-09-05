@@ -16,9 +16,6 @@ allprojects {
 
 
 Step 2. Add the dependency
-allprojects {
-    repositories {
-        ...
-        maven { url 'https://www.jitpack.io' }
-    }
+dependencies {
+        implementation 'com.github.qiaopeichen:qiaopcmusic:1.2.7'
 }
