@@ -332,52 +332,66 @@ void MyAudio::initOpenSLES() {
 }
 
 int MyAudio::getCurrentSampleRateForOpensles(int sample_rate) {
+
+    //#define SL_SAMPLINGRATE_8		((SLuint32) 8000000)
+    //#define SL_SAMPLINGRATE_11_025	((SLuint32) 11025000)
+    //#define SL_SAMPLINGRATE_12		((SLuint32) 12000000)
+    //#define SL_SAMPLINGRATE_16		((SLuint32) 16000000)
+    //#define SL_SAMPLINGRATE_22_05	((SLuint32) 22050000)
+    //#define SL_SAMPLINGRATE_24		((SLuint32) 24000000)
+    //#define SL_SAMPLINGRATE_32		((SLuint32) 32000000)
+    //#define SL_SAMPLINGRATE_44_1	((SLuint32) 44100000)
+    //#define SL_SAMPLINGRATE_48		((SLuint32) 48000000)
+    //#define SL_SAMPLINGRATE_64		((SLuint32) 64000000)
+    //#define SL_SAMPLINGRATE_88_2	((SLuint32) 88200000)
+    //#define SL_SAMPLINGRATE_96		((SLuint32) 96000000)
+    //#define SL_SAMPLINGRATE_192	((SLuint32) 192000000)
     int rate = 0;
     switch (sample_rate)
     {
         case 8000:
-            rate = static_cast<int>SL_SAMPLINGRATE_8;
+            rate = rate * 1000;
             break;
         case 11025:
-            rate = static_cast<int>SL_SAMPLINGRATE_11_025;
+            rate = rate * 1000;
             break;
         case 12000:
-            rate = static_cast<int>SL_SAMPLINGRATE_12;
+            rate = rate * 1000;
             break;
         case 16000:
-            rate = static_cast<int>SL_SAMPLINGRATE_16;
+            rate = rate * 1000;
             break;
         case 22050:
-            rate = static_cast<int>SL_SAMPLINGRATE_22_05;
+            rate = rate * 1000;
             break;
         case 24000:
-            rate = static_cast<int>SL_SAMPLINGRATE_24;
+            rate = rate * 1000;
             break;
         case 32000:
-            rate = static_cast<int>SL_SAMPLINGRATE_32;
+            rate = rate * 1000;
             break;
         case 44100:
-            rate = static_cast<int>SL_SAMPLINGRATE_44_1;
+            rate = rate * 1000;
             break;
         case 48000:
-            rate = static_cast<int>SL_SAMPLINGRATE_48;
+            rate = rate * 1000;
             break;
         case 64000:
-            rate = static_cast<int>SL_SAMPLINGRATE_64;
+            rate = rate * 1000;
             break;
         case 88200:
-            rate = static_cast<int>SL_SAMPLINGRATE_88_2;
+            rate = rate * 1000;
             break;
         case 96000:
-            rate = static_cast<int>SL_SAMPLINGRATE_96;
+            rate = rate * 1000;
             break;
         case 192000:
-            rate = static_cast<int>SL_SAMPLINGRATE_192;
+            rate = rate * 1000;
             break;
         default:
-            rate = static_cast<int>SL_SAMPLINGRATE_44_1;
+            rate = 44100000;
     }
-    return static_cast<int>(rate);
+    return rate;
 }
 
 void MyAudio::pause() {
