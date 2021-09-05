@@ -14,6 +14,8 @@ add_library( # Sets the name of the library.
         src/main/cpp/CallJava.cpp
         src/main/cpp/Playstatus.cpp
         src/main/cpp/native-lib.cpp
+        src/main/cpp/MyPcmBean.cpp
+        src/main/cpp/MyBufferQueue.cpp
 
         src/main/cpp/soundtouch/SoundTouch/AAFilter.cpp
         src/main/cpp/soundtouch/SoundTouch/FIFOSampleBuffer.cpp

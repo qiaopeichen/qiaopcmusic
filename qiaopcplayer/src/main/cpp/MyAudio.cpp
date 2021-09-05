@@ -30,8 +30,65 @@ void *decodePlay(void *data) {
     pthread_exit(&audio->thread_play);
 }
 
+void *pcmCallBack(void *data) {
+    LOGD("pcmCallBack(void *data) ");
+    MyAudio *audio = static_cast<MyAudio *>(data);
+    audio->bufferQueue = new MyBufferQueue(audio->playstatus);
+
+    while (audio->playstatus != NULL && !audio->playstatus->exit) {
+        MyPcmBean *pcmBean = NULL;
+        audio->bufferQueue->getBuffer(&pcmBean);
+        if (pcmBean == NULL) {
+            LOGD("pcmBean == NULL");
+            continue;
+        }
+        LOGD("pcmbean buffer size is %d", pcmBean->buffsize);
+        if (pcmBean->buffsize <= audio->defaultPcmSize) { //不用分包
+            if (audio->isRecordPcm) {
+                audio->callJava->onCallPcmToAAc(CHILD_THREAD, pcmBean->buffsize, pcmBean->buffer);
+            }
+//            if (audio.showPcm)//裁剪
+        } else { //需要分包
+            int pack_num = pcmBean->buffsize / audio->defaultPcmSize;
+            int pack_sub = pcmBean->buffsize % audio->defaultPcmSize;
+            for (int i = 0; i < pack_num; i++) {
+                char *bf = static_cast<char *>(malloc(audio->defaultPcmSize));
+                memcpy(bf, pcmBean->buffer + i * audio->defaultPcmSize, audio->defaultPcmSize);
+                if (audio->isRecordPcm) {
+                    LOGD("需要分包 %d  ...  %d", audio->defaultPcmSize, sizeof(bf));
+                    audio->callJava->onCallPcmToAAc(CHILD_THREAD, audio->defaultPcmSize, bf);
+                }
+//            if (audio.showPcm)//裁剪
+
+                free(bf);
+                bf = NULL;
+            }
+            if (pack_sub > 0) {
+                char *bf = static_cast<char *>(malloc(pack_sub));
+                memcpy(bf, pcmBean->buffer + pack_num * audio->defaultPcmSize, pack_sub);
+                if (audio->isRecordPcm) {
+                    LOGD("需要分包pack_sub %d  ...  %d", pack_sub, sizeof(bf));
+                    audio->callJava->onCallPcmToAAc(CHILD_THREAD, pack_sub, bf);
+                }
+//            if (audio.showPcm)//裁剪
+
+//                free(bf);
+//                bf = NULL;
+            }
+        }
+
+        delete(pcmBean);
+        pcmBean = NULL;
+    }
+    LOGD("pthread_exit(&audio->pcmCallBackThread)");
+    pthread_exit(&audio->pcmCallBackThread);
+}
+
 void MyAudio::play() {
+    LOGD("MyAudio::play()");
+    bufferQueue = new MyBufferQueue(playstatus);
     pthread_create(&thread_play, NULL, decodePlay, this);
+    pthread_create(&pcmCallBackThread, NULL, pcmCallBack, this);
 }
 
 //FILE *outFile = fopen("/mnt/shared/Other/mymusic.pcm", "w");
@@ -193,6 +250,9 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * context) {
                 audio->last_time = audio->clock;
                 audio->callJava->onCallTimeInfo(CHILD_THREAD, audio->clock, audio->duration);
             }
+
+            audio->bufferQueue->putBuffer(audio->sampleBuffer, buffersize * 4);
+
             audio->callJava->onCallValumeDB(CHILD_THREAD, audio->getPCMDB(
                     reinterpret_cast<char *>(audio->sampleBuffer), buffersize * 4));
             (*audio->pcmBufferQueue)->Enqueue(audio->pcmBufferQueue, audio->sampleBuffer, buffersize * 2 * 2);// buffersize * 2 * 2  sample个数 * 16字节=2位 * 双声道
@@ -329,6 +389,15 @@ void MyAudio::stop() {
 
 void MyAudio::release() {
     stop();
+
+    if (bufferQueue != NULL) {
+        bufferQueue->noticeThread();
+        pthread_join(pcmCallBackThread, NULL); // 线程阻塞在pcmCallBackThread，直到pcmCallBackThread退出
+        bufferQueue->release();
+        delete(bufferQueue);
+        bufferQueue = NULL;
+    }
+
     if(queue != NULL) {
         delete(queue); // delete时 会走析构函数
         queue = NULL;
@@ -466,4 +535,8 @@ int MyAudio::getPCMDB(char *pcmdata, size_t pcmsize) {
     }
     //一段时间的分贝
     return db;
+}
+
+void MyAudio::startStopRecord(bool start) {
+    this->isRecordPcm = start;
 }

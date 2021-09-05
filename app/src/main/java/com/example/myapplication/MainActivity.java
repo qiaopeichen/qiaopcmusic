@@ -24,6 +24,8 @@ import com.example.qiaopcplayer.muteenum.MuteEnum;
 import com.example.qiaopcplayer.player.QiaopcPlayer;
 import com.example.qiaopcplayer.util.TimeUtil;
 
+import java.io.File;
+
 public class MainActivity extends AppCompatActivity {
 
     // Used to load the 'native-lib' library on application startup.
@@ -46,9 +48,9 @@ public class MainActivity extends AppCompatActivity {
         tvVolume = findViewById(R.id.tv_volume);
         qiaopcPlayer = new QiaopcPlayer();
         qiaopcPlayer.setVolume(70);
-        qiaopcPlayer.setPitch(1.5f);
-        qiaopcPlayer.setSpeed(1.5f);
-        qiaopcPlayer.setMute(MuteEnum.MUTE_LEFT);
+        qiaopcPlayer.setPitch(1.0f);
+        qiaopcPlayer.setSpeed(1.0f);
+        qiaopcPlayer.setMute(MuteEnum.MUTE_CENTER);
         tvVolume.setText("音量" + qiaopcPlayer.getVolumePercent() + "%");
         seekBarVolume.setProgress( qiaopcPlayer.getVolumePercent());
         qiaopcPlayer.setOnPreparedListener(new OnPreparedListener() {
@@ -103,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         qiaopcPlayer.setOnValumeDBListener(new OnValumeDBListener() {
             @Override
             public void onDBValue(int db) {
-                MyLog.d("当前分贝：" + db);
+//                MyLog.d("当前分贝：" + db);
             }
         });
 
@@ -219,5 +221,21 @@ public class MainActivity extends AppCompatActivity {
     public void normal(View view) {
         qiaopcPlayer.setSpeed(1.0f);
         qiaopcPlayer.setPitch(1.0f);
+    }
+
+    public void start_record(View view) {
+        qiaopcPlayer.startRecord(new File("/storage/emulated/0/Download/textplayer.aac"));
+    }
+
+    public void pause_record(View view) {
+        qiaopcPlayer.pauseRecord();
+    }
+
+    public void goon_record(View view) {
+        qiaopcPlayer.resumeRecord();
+    }
+
+    public void stop_record(View view) {
+        qiaopcPlayer.stopRecord();
     }
 }

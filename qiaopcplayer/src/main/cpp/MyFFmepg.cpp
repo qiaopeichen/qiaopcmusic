@@ -313,3 +313,16 @@ void MyFFmepg::setSpeed(float speed) {
         audio->setSpeed(speed);
     }
 }
+
+int MyFFmepg::getSampleRate() {
+    if (audio != NULL) {
+        return audio->avCodecContext->sample_rate;
+    }
+    return 0;
+}
+
+void MyFFmepg::startStopRecord(bool start) {
+    if (audio != NULL) {
+        audio->startStopRecord(start);
+    }
+}

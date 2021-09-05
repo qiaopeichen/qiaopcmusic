@@ -26,6 +26,7 @@ CallJava::CallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_error = env->GetMethodID(jlz, "onCallError", "(ILjava/lang/String;)V");
     jmid_complete = env->GetMethodID(jlz, "onCallComplete", "()V");
     jmid_valumedb = env->GetMethodID(jlz, "onCallValumeDB", "(I)V");
+    jmid_callpcmtoacc = env->GetMethodID(jlz, "encodecPcmToAAC", "(I[B)V");
 }
 
 void CallJava::onCallPrepared(int type) {
@@ -155,6 +156,36 @@ void CallJava::onCallValumeDB(int type, int db) {
             isAttached = true;
         }
         jniEnv->CallVoidMethod(jobj, jmid_valumedb, db);
+        if (isAttached){
+            javaVM->DetachCurrentThread();
+        }
+    }
+}
+
+void CallJava::onCallPcmToAAc(int type, int size, void *buffer) {
+    if (type == MAIN_THREAD) {
+        jbyteArray jbuffer = jniEnv->NewByteArray(size);
+        jniEnv->SetByteArrayRegion(jbuffer, 0, size, static_cast<const jbyte *>(buffer));
+        jniEnv->CallVoidMethod(jobj, jmid_callpcmtoacc, size, jbuffer);
+        jniEnv->DeleteLocalRef(jbuffer);
+    } else if (type == CHILD_THREAD) {
+        JNIEnv *jniEnv;
+        int status;
+        bool isAttached = false;
+        status = javaVM->GetEnv((void**)&jniEnv, JNI_VERSION_1_4);
+        if (status < 0) {
+            if (javaVM->AttachCurrentThread(&jniEnv, 0) != JNI_OK) { //从全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
+                if (LOG_DEBUG) {
+                    LOGE("get child thread jnienv wrong");
+                }
+                return;
+            }
+            isAttached = true;
+        }
+        jbyteArray jbuffer = jniEnv->NewByteArray(size);
+        jniEnv->SetByteArrayRegion(jbuffer, 0, size, static_cast<const jbyte *>(buffer));
+        jniEnv->CallVoidMethod(jobj, jmid_callpcmtoacc, size, jbuffer);
+        jniEnv->DeleteLocalRef(jbuffer);
         if (isAttached){
             javaVM->DetachCurrentThread();
         }

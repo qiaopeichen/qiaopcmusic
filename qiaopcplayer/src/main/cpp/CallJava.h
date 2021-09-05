@@ -26,6 +26,7 @@ public:
     jmethodID jmid_error;
     jmethodID jmid_complete;
     jmethodID jmid_valumedb;
+    jmethodID jmid_callpcmtoacc;
 public:
     CallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj);
     ~CallJava();
@@ -41,6 +42,8 @@ public:
     void onCallComplete(int type);
 
     void onCallValumeDB(int type, int db);
+
+    void onCallPcmToAAc(int type, int size, void *buffer);
 };
 
 

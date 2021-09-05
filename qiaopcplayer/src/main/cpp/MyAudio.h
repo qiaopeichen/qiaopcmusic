@@ -12,6 +12,9 @@
 #include <SLES/OpenSLES_Android.h>
 
 #include "SoundTouch.h" //soundTouch库
+#include "MyBufferQueue.h"
+#include "MyPcmBean.h"
+
 using namespace soundtouch;
 
 extern "C" {
@@ -46,6 +49,13 @@ public:
 
     float pitch = 1.0f;
     float speed = 1.0f;
+
+    bool isRecordPcm = false;
+
+    pthread_t pcmCallBackThread;
+    MyBufferQueue *bufferQueue;
+    int defaultPcmSize = 4096;
+
     //引擎接口
     SLObjectItf engineObject = NULL;
     SLEngineItf engineEngine = NULL;
@@ -108,6 +118,8 @@ public:
     //  与int固定四个字节不同有所不同,size_t的取值range是目标平台下最大可能的数组尺寸,
     //  一些平台下size_t的范围小于int的正数范围,又或者大于unsigned int. 使用Int既有可能浪费，又有可能范围不够大。
     int getPCMDB(char *pcmdata, size_t pcmsize);//获取分贝
+
+    void startStopRecord(bool start);
 };
 
 
