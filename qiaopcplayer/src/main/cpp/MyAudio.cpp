@@ -377,7 +377,7 @@ int MyAudio::getCurrentSampleRateForOpensles(int sample_rate) {
         default:
             rate =  SL_SAMPLINGRATE_44_1;
     }
-    return rate;
+    return (uint)rate;
 }
 
 void MyAudio::pause() {
