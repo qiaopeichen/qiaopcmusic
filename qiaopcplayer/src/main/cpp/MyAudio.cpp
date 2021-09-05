@@ -297,10 +297,11 @@ void MyAudio::initOpenSLES() {
     };
     SLDataSource slDataSource = {&android_queue, &pcm};
 
-    const SLInterfaceID  ids[4] = {SL_IID_BUFFERQUEUE,SL_IID_EFFECTSEND, SL_IID_VOLUME, SL_IID_MUTESOLO}; //opensl的inferface，需要的要写在里面，否则调用了也无效
-    const SLboolean  req[4] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+    //SL_IID_PLAYBACKRATE 自动控制采样率，避免有些音频播放有杂音
+    const SLInterfaceID  ids[5] = {SL_IID_BUFFERQUEUE,SL_IID_EFFECTSEND, SL_IID_VOLUME, SL_IID_MUTESOLO, SL_IID_PLAYBACKRATE}; //opensl的inferface，需要的要写在里面，否则调用了也无效
+    const SLboolean  req[5] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
 
-    (*engineEngine)->CreateAudioPlayer(engineEngine, &pcmPlayerObject, &slDataSource, &audioSnk, 4, ids, req);
+    (*engineEngine)->CreateAudioPlayer(engineEngine, &pcmPlayerObject, &slDataSource, &audioSnk, 5, ids, req);
     //初始化播放器
     (*pcmPlayerObject)->Realize(pcmPlayerObject, SL_BOOLEAN_FALSE);
     //得到接口后调用 获取Player接口

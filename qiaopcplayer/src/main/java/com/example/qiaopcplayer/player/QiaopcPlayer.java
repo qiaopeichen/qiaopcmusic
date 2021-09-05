@@ -11,6 +11,7 @@ import com.example.qiaopcplayer.listener.OnErrorListener;
 import com.example.qiaopcplayer.listener.OnLoadListener;
 import com.example.qiaopcplayer.listener.OnPauseResumeListener;
 import com.example.qiaopcplayer.listener.OnPreparedListener;
+import com.example.qiaopcplayer.listener.OnRecordTimeListener;
 import com.example.qiaopcplayer.listener.OnTimeInfoListener;
 import com.example.qiaopcplayer.listener.OnValumeDBListener;
 import com.example.qiaopcplayer.log.MyLog;
@@ -50,6 +51,7 @@ public class QiaopcPlayer {
     private OnErrorListener onErrorListener;
     private OnCompleteListener onCompleteListener;
     private OnValumeDBListener onValumeDBListener;
+    private OnRecordTimeListener onRecordTimeListener;
     private static TimeInfoBean timeInfoBean;
 
     public void setSource(String source) {
@@ -82,6 +84,10 @@ public class QiaopcPlayer {
 
     public void setOnValumeDBListener(OnValumeDBListener onValumeDBListener) {
         this.onValumeDBListener = onValumeDBListener;
+    }
+
+    public void setOnRecordTimeListener(OnRecordTimeListener onRecordTimeListener) {
+        this.onRecordTimeListener = onRecordTimeListener;
     }
 
     public QiaopcPlayer() {
@@ -234,9 +240,10 @@ public class QiaopcPlayer {
 
     public void startRecord(File outfile) {
         if (!initmediacodec) {
-            if(n_samplerate() > 0) {
+            audioSamplerate = n_samplerate();
+            if(audioSamplerate > 0) {
                 initmediacodec = true;
-                initMediacodec(n_samplerate(), outfile);
+                initMediacodec(audioSamplerate, outfile);
                 n_startstoprecord(true);
                 MyLog.d("开始录制");
             }
@@ -289,6 +296,8 @@ public class QiaopcPlayer {
     private int perpcmsize = 0;
     private byte[] outByteBuffer = null;
     private int aacsamplerate = 4;
+    private double recordTime = 0;
+    private int audioSamplerate = 0;
 
     //关于AAC的ADTS头文件信息介绍 博客https://blog.csdn.net/jay100500/article/details/52955232
     private void initMediacodec(int samperate, File outfile) {
@@ -304,6 +313,7 @@ public class QiaopcPlayer {
                 MyLog.d("create encoder wrong");
                 return;
             }
+            recordTime = 0;
             encoder.configure(encoderFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
             outputStream = new FileOutputStream(outfile); //编码后输出的文件就写到outfile里
             encoder.start();//接收输入队列并进行编码
@@ -314,6 +324,12 @@ public class QiaopcPlayer {
     private void encodecPcmToAAC(int size, byte[] buffer) {
         MyLog.d("buffer size is:" + size + " buffer byte:" + buffer.length);
         if (buffer != null && encoder != null) {
+            recordTime += size * 1.0 / (audioSamplerate * 2 * (16 / 8));
+//            MyLog.d("recordTime = " + recordTime);
+            if (onRecordTimeListener != null) {
+                onRecordTimeListener.onRecordTime((int) recordTime);
+            }
+
             int inputBufferIndex = encoder.dequeueInputBuffer(0);//取出一个子项
             if (inputBufferIndex >= 0) {
                 ByteBuffer byteBuffer = encoder.getInputBuffers()[inputBufferIndex]; //取出内存空间的操作地址
@@ -423,6 +439,7 @@ public class QiaopcPlayer {
             return;
         }
         try {
+            recordTime = 0;
             outputStream.close();
             outputStream = null;
             encoder.stop();
