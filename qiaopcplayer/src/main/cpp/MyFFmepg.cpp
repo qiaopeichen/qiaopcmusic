@@ -40,7 +40,7 @@ int avformat_callback(void *ctx) {
 
 void MyFFmepg::decodeFFmpegThread() {
     pthread_mutex_lock(&init_mutex);
-    av_register_all(); // 注册解码器
+//    av_register_all(); // 注册解码器 ffmpeg新版本已经弃用，不必初始化
     avformat_network_init(); //网络初始化
     pFormatCtx = avformat_alloc_context(); // 上下文初始化
     //设置超时回调,有些不存在的地址或者网络不好的情况下要卡很久
