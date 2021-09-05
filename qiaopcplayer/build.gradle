@@ -8,8 +8,8 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 26
-        versionCode 102000
-        versionName "1.2.0"
+        versionCode 102001
+        versionName "1.2.1"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -17,7 +17,7 @@ android {
             cmake {
                 cppFlags "-frtti -fexceptions"
                 abiFilters "armeabi-v7a", "x86"
-                version "3.6.4"
+//                version "3.10.2"
             }
         }
 
