@@ -98,11 +98,17 @@ void MyAudio::play() {
 int MyAudio::resampleAudio(void **pcmbuf) {
     while (playstatus != NULL && !playstatus->exit) {
 
-        if (queue->getQueueSize() == 0) {
+        if (playstatus->seek) {
+            av_usleep(1000 * 100);
+            continue;
+        }
+
+        if (queue->getQueueSize() == 0) { //加载中
             if (!playstatus->load) {
                 playstatus->load = true;
                 callJava->onCallLoad(CHILD_THREAD, true);
             }
+            av_usleep(1000 * 100);
             continue;
         } else {
             if (playstatus->load) {
@@ -179,7 +185,7 @@ int MyAudio::resampleAudio(void **pcmbuf) {
                 now_time = clock;
             }
             clock = now_time;
-            *pcmbuf = buffer;
+            *pcmbuf = buffer; // 这里out_buffer用的和buffer同一个内存
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
@@ -297,6 +303,10 @@ void MyAudio::initOpenSLES() {
     };
     SLDataSource slDataSource = {&android_queue, &pcm};
 
+
+    //其中类型的GUID是OpenSLES定死的，音量(SL_IID_VOLUME)、采样率控制(SL_IID_PLAYBACKRATE)、均衡器(SL_IID_EQUALIZER)、预设混响(SL_IID_PRESETREVERB)、环境混响(SL_IID_ENVIRONMENTALREVERB)、3D定位(SL_IID_3DLOCATION)、多普勒效应(SL_IID_3DDOPPLER)、低音增强(SL_IID_BASSBOOST)、升降调(SL_IID_PITCH)、虚拟化(SL_IID_VIRTUALIZER)。这里没有你想要的？你想自定义？什么，你要做一个高音增强？无论做什么，都得在这里面选一个。为了简单一点，那就选虚拟化吧，虚拟化只有一个固定参数。(这里没看明白？那就把整个教程都看完，相信看到最后你会明白的)
+    //　　下一步是生成一个自己独一无二的GUID来给自己的SoundFX命名。生成的办法有很多，有现成软件也有网页。这里我生成的是{42C6510E-1811-4857-8CA5-C204A8A3B0D4}。
+    //　　以上提及的详细内容和编程指导请阅读Android NDK\platforms\android-14\arch-arm\usr\include\SLES\OpenSLES.h。(Android 4.0对应android
     //SL_IID_PLAYBACKRATE 自动控制采样率，避免有些音频播放有杂音
     const SLInterfaceID  ids[5] = {SL_IID_BUFFERQUEUE,SL_IID_EFFECTSEND, SL_IID_VOLUME, SL_IID_MUTESOLO, SL_IID_PLAYBACKRATE}; //opensl的inferface，需要的要写在里面，否则调用了也无效
     const SLboolean  req[5] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
@@ -409,6 +419,9 @@ void MyAudio::release() {
         (*pcmPlayerObject)->Destroy(pcmPlayerObject);
         pcmPlayerObject = NULL;
         pcmPlayerPlay = NULL;
+        pcmBufferQueue = NULL;
+        pcmMutePlay = NULL;
+        pcmVolumePlay = NULL;
     }
     if (outputMixObject != NULL) {
         (*outputMixObject)->Destroy(outputMixObject);
@@ -424,6 +437,21 @@ void MyAudio::release() {
     if (buffer != NULL) {
         free(buffer);
         buffer = NULL;
+    }
+
+    if (out_buffer != NULL) {
+        //申请out_buffer时候 用的是和buffer同一个内存，所以无需free
+        out_buffer = NULL;
+    }
+
+    if (soundTouch != NULL) {
+        delete soundTouch;
+        soundTouch = NULL;
+    }
+
+    if (sampleBuffer != NULL) {
+        free(sampleBuffer);
+        sampleBuffer = NULL;
     }
 
     //解码器上下文释放

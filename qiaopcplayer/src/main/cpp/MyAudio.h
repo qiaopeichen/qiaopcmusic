@@ -20,6 +20,7 @@ using namespace soundtouch;
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libswresample/swresample.h>
+#include <libavutil/time.h>
 };
 
 class MyAudio {

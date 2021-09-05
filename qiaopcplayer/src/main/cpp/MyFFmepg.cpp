@@ -3,7 +3,6 @@
 //
 
 #include "MyFFmepg.h"
-
 MyFFmepg::MyFFmepg(Playstatus *playstatus, CallJava *callJava, const char *url) {
     this->callJava = callJava;
     this->url = url;
@@ -142,9 +141,10 @@ void MyFFmepg::start() {
     while (playstatus != NULL && !playstatus->exit) {
 
         if (playstatus->seek) {
+            av_usleep(100 *1000); //睡眠100毫秒
             continue;
         }
-        if (audio->queue->getQueueSize() > 40) {
+        if (audio->queue->getQueueSize() > 100) {
             continue;
         }
         AVPacket *avPacket = av_packet_alloc(); //AVPacket是存储压缩编码数据相关信息的结构体
@@ -180,6 +180,7 @@ void MyFFmepg::start() {
             avPacket = NULL;
             while (playstatus != NULL && !playstatus->exit) {
                 if (audio->queue->getQueueSize() > 0) {
+                    av_usleep(100 *1000); //睡眠100毫秒
                     continue;
                 } else {
                     playstatus->exit = true;
