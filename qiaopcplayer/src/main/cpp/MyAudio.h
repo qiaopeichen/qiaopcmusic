@@ -52,6 +52,7 @@ public:
     float speed = 1.0f;
 
     bool isRecordPcm = false;
+    bool readFrameFinish = true;
 
     pthread_t pcmCallBackThread;
     MyBufferQueue *bufferQueue;

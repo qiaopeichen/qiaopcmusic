@@ -137,7 +137,7 @@ void MyFFmepg::start() {
     }
 
     audio->play();
-
+    int count = 0;
     while (playstatus != NULL && !playstatus->exit) {
 
         if (playstatus->seek) {
@@ -147,9 +147,9 @@ void MyFFmepg::start() {
         if (audio->queue->getQueueSize() > 100) {
             continue;
         }
-        AVPacket *avPacket = av_packet_alloc(); //AVPacket是存储压缩编码数据相关信息的结构体
+        AVPacket *avPacket = av_packet_alloc(); //AVPacket是存储压缩编码数据相关信息的结构体，一个avpacket里，可能存在多个frame
         pthread_mutex_lock(&seek_mutex);
-        int ret = av_read_frame(pFormatCtx, avPacket);
+        int ret = av_read_frame(pFormatCtx, avPacket); //
         pthread_mutex_unlock(&seek_mutex);
 
         if (ret == 0) {//av_read_frame()获取视频的一帧，不存在半帧说法。
@@ -167,6 +167,8 @@ void MyFFmepg::start() {
             //            time_base单元(猜测格式是否不能提供它们)。
             //            如果视频格式为B-frames，pkt->pts可以是AV_NOPTS_VALUE，所以如果不解压缩有效负载，最好依赖pkt->dts。
             if (avPacket->stream_index == audio->streamIndex) {
+                count++;
+                LOGE("解码第%d 帧", count);
                 //stream_index：标识该AVPacket所属的视频/音频流。
                 audio->queue->putAvpacket(avPacket);
             } else {
@@ -284,6 +286,7 @@ void MyFFmepg::seek(int64_t secds) {
             pthread_mutex_lock(&seek_mutex);
 
             int64_t rel = secds * AV_TIME_BASE; //真实时间 = 秒数 * 时间基
+            avcodec_flush_buffers(audio->avCodecContext);
             avformat_seek_file(pFormatCtx, -1, INT64_MIN, rel, INT64_MAX, 0); // -1为全部音频文件
             pthread_mutex_unlock(&seek_mutex);
             playstatus->seek = false;

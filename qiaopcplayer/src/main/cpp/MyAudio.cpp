@@ -117,23 +117,29 @@ int MyAudio::resampleAudio(void **pcmbuf) {
             }
         }
 
-        avPacket = av_packet_alloc();
-        if (queue->getAvpacket(avPacket) != 0) {
-            av_packet_free(&avPacket);
-            av_free(avPacket);
-            avPacket = NULL;
-            continue;
+        if (readFrameFinish) {
+            avPacket = av_packet_alloc();
+            if (queue->getAvpacket(avPacket) != 0) {
+                av_packet_free(&avPacket);
+                av_free(avPacket);
+                avPacket = NULL;
+                continue;
+            }
+            ret = avcodec_send_packet(avCodecContext, avPacket); //一个avpacket里，可能存在多个frame
+            if (ret != 0) {
+                av_packet_free(&avPacket);
+                av_free(avPacket);
+                avPacket = NULL;
+                continue;
+            }
         }
-        ret = avcodec_send_packet(avCodecContext, avPacket);
-        if (ret != 0) {
-            av_packet_free(&avPacket);
-            av_free(avPacket);
-            avPacket = NULL;
-            continue;
-        }
+
+
         avFrame = av_frame_alloc();
         ret = avcodec_receive_frame(avCodecContext, avFrame);
-        if (ret == 0) {
+        if (ret == 0) { //==0 没有读取完
+            readFrameFinish = false;
+
             if (avFrame->channels > 0 && avFrame->channel_layout == 0) {//声道数: 比如立体声 channels = 2
                 //根据声道数获取声道布局
                 avFrame->channel_layout = av_get_default_channel_layout(avFrame->channels);
@@ -161,6 +167,7 @@ int MyAudio::resampleAudio(void **pcmbuf) {
                     swr_free(&swr_ctx);
                     swr_ctx = NULL;
                 }
+                readFrameFinish = true;
                 continue;
             }
 
@@ -186,9 +193,9 @@ int MyAudio::resampleAudio(void **pcmbuf) {
             }
             clock = now_time;
             *pcmbuf = buffer; // 这里out_buffer用的和buffer同一个内存
-            av_packet_free(&avPacket);
-            av_free(avPacket);
-            avPacket = NULL;
+//            av_packet_free(&avPacket); //avcodec_receive_frame里统一释放，所这里先注掉
+//            av_free(avPacket);
+//            avPacket = NULL;
             av_frame_free(&avFrame);
             av_free(avFrame);
             avFrame = NULL;
@@ -196,6 +203,7 @@ int MyAudio::resampleAudio(void **pcmbuf) {
             swr_ctx = NULL;
             break;
         } else {
+            readFrameFinish = true;
             av_packet_free(&avPacket);
             av_free(avPacket);
             avPacket = NULL;
