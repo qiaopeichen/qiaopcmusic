@@ -8,6 +8,11 @@ MyAudio::MyAudio(Playstatus *playstatus, int sample_rate, CallJava *callJava) {
     this->callJava = callJava;
     this->playstatus = playstatus;
     this->sample_rate = sample_rate;
+
+    this->isCut = false;
+    this->end_time = 0;
+    this->showPcm = false;
+
     queue = new MyQueue(playstatus);
     buffer = (uint8_t *) av_malloc(sample_rate * 2 * 2);//采样率*声道数*位数大小（16/8）
 
@@ -47,7 +52,9 @@ void *pcmCallBack(void *data) {
             if (audio->isRecordPcm) {
                 audio->callJava->onCallPcmToAAc(CHILD_THREAD, pcmBean->buffsize, pcmBean->buffer);
             }
-//            if (audio.showPcm)//裁剪
+            if(audio->showPcm) {
+                audio->callJava->onCallPcmInfo(pcmBean->buffer, pcmBean->buffsize);
+            }
         } else { //需要分包
             int pack_num = pcmBean->buffsize / audio->defaultPcmSize;
             int pack_sub = pcmBean->buffsize % audio->defaultPcmSize;
@@ -58,8 +65,9 @@ void *pcmCallBack(void *data) {
                     LOGD("需要分包 %d  ...  %d", audio->defaultPcmSize, sizeof(bf));
                     audio->callJava->onCallPcmToAAc(CHILD_THREAD, audio->defaultPcmSize, bf);
                 }
-//            if (audio.showPcm)//裁剪
-
+                if(audio->showPcm) {
+                    audio->callJava->onCallPcmInfo(bf, pcmBean->buffsize);
+                }
                 free(bf);
                 bf = NULL;
             }
@@ -70,7 +78,9 @@ void *pcmCallBack(void *data) {
                     LOGD("需要分包pack_sub %d  ...  %d", pack_sub, sizeof(bf));
                     audio->callJava->onCallPcmToAAc(CHILD_THREAD, pack_sub, bf);
                 }
-//            if (audio.showPcm)//裁剪
+                if(audio->showPcm) {
+                    audio->callJava->onCallPcmInfo(bf, pack_sub);
+                }
 
 //                free(bf);
 //                bf = NULL;
@@ -270,6 +280,13 @@ void pcmBufferCallBack(SLAndroidSimpleBufferQueueItf bf, void * context) {
             audio->callJava->onCallValumeDB(CHILD_THREAD, audio->getPCMDB(
                     reinterpret_cast<char *>(audio->sampleBuffer), buffersize * 4));
             (*audio->pcmBufferQueue)->Enqueue(audio->pcmBufferQueue, audio->sampleBuffer, buffersize * 2 * 2);// buffersize * 2 * 2  sample个数 * 16字节=2位 * 双声道
+
+            if (audio->isCut) {
+                if (audio->clock > audio->end_time) {
+                    LOGE("裁剪退出");
+                    audio->playstatus->exit = true;
+                }
+            }
         }
     }
 }
@@ -334,6 +351,15 @@ void MyAudio::initOpenSLES() {
     setVolume(volumePercent);
     //缓冲接口回调
     (*pcmBufferQueue)->RegisterCallback(pcmBufferQueue, pcmBufferCallBack, this);
+    //每次播完或录完一个 buffer 都会回调创建时 RegisterCallback 传入的callback方法，代表当前buffer数据已经处理完毕，buffer出队， 如果是录音你应该获取这个 buffer 保存下来，写文件或者其他操作都可以；如果是播放就代表 当前buffer已经播放完毕，你可以 Enqueue 下一个buffer了
+    //
+    //作者：WuTa0
+    //链接：https://www.jianshu.com/p/5308ab38a3d0
+    //来源：简书
+    //著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+
+
     //获取播放状态接口
     (*pcmPlayerPlay)->SetPlayState(pcmPlayerPlay, SL_PLAYSTATE_PLAYING);
     pcmBufferCallBack(pcmBufferQueue, this);

@@ -157,4 +157,13 @@ Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1startstoprecord(JNIEnv *env
     if (fFmepg != NULL) {
         fFmepg->startStopRecord(start);
     }
+}extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_example_qiaopcplayer_player_QiaopcPlayer_n_1cuteaudioplay(JNIEnv *env, jobject instance,
+                                                                   jint start_time, jint end_time,
+                                                                   jboolean showPcm) {
+    if (fFmepg != NULL) {
+        return fFmepg->cutAudioPlay(start_time, end_time, showPcm);
+    }
+    return false;
 }

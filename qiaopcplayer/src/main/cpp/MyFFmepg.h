@@ -48,6 +48,8 @@ public:
     int getSampleRate();
 
     void startStopRecord(bool start);
+
+    bool cutAudioPlay(int start_time, int end_time, bool showPcm);
 };
 
 

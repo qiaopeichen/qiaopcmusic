@@ -10,6 +10,7 @@ import com.example.qiaopcplayer.listener.OnCompleteListener;
 import com.example.qiaopcplayer.listener.OnErrorListener;
 import com.example.qiaopcplayer.listener.OnLoadListener;
 import com.example.qiaopcplayer.listener.OnPauseResumeListener;
+import com.example.qiaopcplayer.listener.OnPcmInfoListener;
 import com.example.qiaopcplayer.listener.OnPreparedListener;
 import com.example.qiaopcplayer.listener.OnRecordTimeListener;
 import com.example.qiaopcplayer.listener.OnTimeInfoListener;
@@ -52,6 +53,7 @@ public class QiaopcPlayer {
     private OnCompleteListener onCompleteListener;
     private OnValumeDBListener onValumeDBListener;
     private OnRecordTimeListener onRecordTimeListener;
+    private OnPcmInfoListener onPcmInfoListener;
     private static TimeInfoBean timeInfoBean;
 
     public void setSource(String source) {
@@ -88,6 +90,10 @@ public class QiaopcPlayer {
 
     public void setOnRecordTimeListener(OnRecordTimeListener onRecordTimeListener) {
         this.onRecordTimeListener = onRecordTimeListener;
+    }
+
+    public void setOnPcmInfoListener(OnPcmInfoListener onPcmInfoListener) {
+        this.onPcmInfoListener = onPcmInfoListener;
     }
 
     public QiaopcPlayer() {
@@ -268,9 +274,30 @@ public class QiaopcPlayer {
         MyLog.d("继续录制");
     }
 
+    public void cutAudioPlay(int start_time, int end_time, boolean showPcm) {
+        if (n_cuteaudioplay(start_time, end_time, showPcm)) {
+            start();
+        } else {
+            stop();
+            onCallError(2001, "cutaudio params is wrong");
+        }
+    }
+
     public void onCallValumeDB(int db) {
         if (onValumeDBListener != null) {
             onValumeDBListener.onDBValue(db);
+        }
+    }
+
+    public void onCallPcmInfo(byte[] buffer, int buffersize) {
+        if (onPcmInfoListener != null) {
+            onPcmInfoListener.onPcmInfo(buffer, buffersize);
+        }
+    }
+
+    public void onCallPcmRate(int sampleRate) {
+        if (onPcmInfoListener != null) {
+            onPcmInfoListener.onPcmRate(sampleRate, 16, 2);
         }
     }
 
@@ -287,6 +314,7 @@ public class QiaopcPlayer {
     private native void n_speed(float speed);
     private native int n_samplerate();
     private native void n_startstoprecord(boolean start);
+    private native boolean n_cuteaudioplay(int start_time, int end_time, boolean showPcm);
 
     //mediacodec
     private MediaFormat encoderFormat = null;

@@ -77,6 +77,7 @@ void MyFFmepg::decodeFFmpegThread() {
                 audio->duration = pFormatCtx->duration / AV_TIME_BASE;//时间基，理解为时间单位
                 audio->time_base = pFormatCtx->streams[i]->time_base;
                 duration = audio->duration;
+                callJava->onCallPcmRate(audio->sample_rate);
             }
         }
     }
@@ -329,4 +330,15 @@ void MyFFmepg::startStopRecord(bool start) {
     if (audio != NULL) {
         audio->startStopRecord(start);
     }
+}
+
+bool MyFFmepg::cutAudioPlay(int start_time, int end_time, bool showPcm) {
+    if (start_time >= 0 && end_time <= duration && start_time < end_time) {
+        audio->isCut = true;
+        audio->end_time = end_time;
+        audio->showPcm = showPcm;
+        seek(start_time);
+        return true;
+    }
+    return false;
 }

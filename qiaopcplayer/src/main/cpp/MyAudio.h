@@ -92,6 +92,10 @@ public:
     int nb = 0;
     int num = 0;//返回的采样个数
 
+    bool isCut = false;
+    int end_time = 0;
+    bool showPcm = false;
+
 public:
     MyAudio(Playstatus *playstatus, int sample_rate, CallJava *callJava);
     ~MyAudio();

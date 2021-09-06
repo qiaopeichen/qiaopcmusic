@@ -27,6 +27,8 @@ CallJava::CallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj) {
     jmid_complete = env->GetMethodID(jlz, "onCallComplete", "()V");
     jmid_valumedb = env->GetMethodID(jlz, "onCallValumeDB", "(I)V");
     jmid_callpcmtoacc = env->GetMethodID(jlz, "encodecPcmToAAC", "(I[B)V");
+    jmid_pcminfo = env->GetMethodID(jlz, "onCallPcmInfo", "([BI)V");
+    jmid_pcmrate = env->GetMethodID(jlz, "onCallPcmRate", "(I)V");
 }
 
 void CallJava::onCallPrepared(int type) {
@@ -189,5 +191,51 @@ void CallJava::onCallPcmToAAc(int type, int size, void *buffer) {
         if (isAttached){
             javaVM->DetachCurrentThread();
         }
+    }
+}
+
+void CallJava::onCallPcmInfo(void *buffer, int size) {
+
+    JNIEnv *jniEnv;
+    int status;
+    bool isAttached = false;
+    status = javaVM->GetEnv((void **) &jniEnv, JNI_VERSION_1_4);
+    if (status < 0) {
+        if (javaVM->AttachCurrentThread(&jniEnv, 0) !=
+            JNI_OK) { //从全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
+            if (LOG_DEBUG) {
+                LOGE("get child thread jnienv wrong");
+            }
+            return;
+        }
+        isAttached = true;
+    }
+    jbyteArray jbuffer = jniEnv->NewByteArray(size);
+    jniEnv->SetByteArrayRegion(jbuffer, 0, size, static_cast<const jbyte *>(buffer));
+    jniEnv->CallVoidMethod(jobj, jmid_pcminfo,jbuffer, size);
+    jniEnv->DeleteLocalRef(jbuffer);
+    if (isAttached) {
+        javaVM->DetachCurrentThread();
+    }
+}
+
+void CallJava::onCallPcmRate(int samplerate) {
+    JNIEnv *jniEnv;
+    int status;
+    bool isAttached = false;
+    status = javaVM->GetEnv((void **) &jniEnv, JNI_VERSION_1_4);
+    if (status < 0) {
+        if (javaVM->AttachCurrentThread(&jniEnv, 0) !=
+            JNI_OK) { //从全局的JavaVM中获取到环境变量，获取到当前线程中的JNIEnv指针
+            if (LOG_DEBUG) {
+                LOGE("get child thread jnienv wrong");
+            }
+            return;
+        }
+        isAttached = true;
+    }
+    jniEnv->CallVoidMethod(jobj, jmid_pcmrate,samplerate);
+    if (isAttached) {
+        javaVM->DetachCurrentThread();
     }
 }

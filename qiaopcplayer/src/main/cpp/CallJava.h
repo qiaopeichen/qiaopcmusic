@@ -27,6 +27,8 @@ public:
     jmethodID jmid_complete;
     jmethodID jmid_valumedb;
     jmethodID jmid_callpcmtoacc;
+    jmethodID jmid_pcminfo;
+    jmethodID jmid_pcmrate;
 public:
     CallJava(JavaVM *javaVM, JNIEnv *env, jobject *obj);
     ~CallJava();
@@ -44,6 +46,10 @@ public:
     void onCallValumeDB(int type, int db);
 
     void onCallPcmToAAc(int type, int size, void *buffer);
+
+    void onCallPcmInfo(void *buffer, int size);
+
+    void onCallPcmRate(int samplerate);
 };
 
 
