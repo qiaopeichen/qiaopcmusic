@@ -79,49 +79,23 @@ void MyFFmepg::decodeFFmpegThread() {
                 duration = audio->duration;
                 callJava->onCallPcmRate(audio->sample_rate);
             }
+        } else if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {//得到视频流
+            if (video == NULL) {
+                video = new MyVideo(playstatus, callJava);
+                video->streamIndex = i;
+                video->codecpar = pFormatCtx->streams[i]->codecpar;
+                video->time_base = pFormatCtx->streams[i]->time_base;
+            }
         }
     }
 
-    AVCodec *dec = avcodec_find_decoder(audio->codecpar->codec_id);//该方法用于寻找解码器；codec_id：编码数据类型
-    if (!dec) {
-        if (LOG_DEBUG) {
-            LOGE("can not find decoder");
-            callJava->CallError(CHILD_THREAD, 1003,"can not find decoder");
-        }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
+    if (audio != NULL) {
+        getCodecContext(audio->codecpar, &audio->avCodecContext);
     }
-    audio->avCodecContext = avcodec_alloc_context3(dec);//分配解码器
-    if (!audio->avCodecContext) {
-        if (LOG_DEBUG) {
-            LOGE("can not alloc new decoderctx");
-            callJava->CallError(CHILD_THREAD, 1004,"can not alloc new decoderctx");
-        }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
+    if (video != NULL) {
+        getCodecContext(video->codecpar, &video->avCodecContext);
     }
 
-    //把解码器信息复制到解码器上下文中
-    if (avcodec_parameters_to_context(audio->avCodecContext, audio->codecpar) < 0) {
-        if (LOG_DEBUG) {
-            LOGE("can not find decoderctx");
-            callJava->CallError(CHILD_THREAD, 1005,"can not find decoderctx");
-        }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
-    }
-    if (avcodec_open2(audio->avCodecContext, dec, 0) != 0) { //avcodec_open2 该函数用于初始化一个视音频编解码器的AVCodecContext
-        if (LOG_DEBUG) {
-            LOGE("can not open audio streams");
-            callJava->CallError(CHILD_THREAD, 1006,"can not open audio streams");
-        }
-        exit = true;
-        pthread_mutex_unlock(&init_mutex);
-        return;
-    }
     //回调java层
     callJava->onCallPrepared(CHILD_THREAD);
     pthread_mutex_unlock(&init_mutex);
@@ -138,6 +112,7 @@ void MyFFmepg::start() {
     }
 
     audio->play();
+    video->play();
     int count = 0;
     while (playstatus != NULL && !playstatus->exit) {
 
@@ -172,6 +147,8 @@ void MyFFmepg::start() {
                 LOGE("解码第%d 帧", count);
                 //stream_index：标识该AVPacket所属的视频/音频流。
                 audio->queue->putAvpacket(avPacket);
+            } else if (avPacket->stream_index == video->streamIndex) {
+                video->queue->putAvpacket(avPacket);
             } else {
                 av_packet_free(&avPacket);
                 av_free(avPacket);
@@ -341,4 +318,48 @@ bool MyFFmepg::cutAudioPlay(int start_time, int end_time, bool showPcm) {
         return true;
     }
     return false;
+}
+
+int MyFFmepg::getCodecContext(AVCodecParameters *codecpar, AVCodecContext **avCodecContext) {//**指向指针的地址
+    AVCodec *dec = avcodec_find_decoder(codecpar->codec_id);//该方法用于寻找解码器；codec_id：编码数据类型
+    if (!dec) {
+        if (LOG_DEBUG) {
+            LOGE("can not find decoder");
+            callJava->CallError(CHILD_THREAD, 1003,"can not find decoder");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    *avCodecContext/*指向指针的值*/ = avcodec_alloc_context3(dec);//分配解码器
+    if (!*avCodecContext) {
+        if (LOG_DEBUG) {
+            LOGE("can not alloc new decoderctx");
+            callJava->CallError(CHILD_THREAD, 1004,"can not alloc new decoderctx");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+
+    //把解码器信息复制到解码器上下文中
+    if (avcodec_parameters_to_context(*avCodecContext, codecpar) < 0) {
+        if (LOG_DEBUG) {
+            LOGE("can not find decoderctx");
+            callJava->CallError(CHILD_THREAD, 1005,"can not find decoderctx");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    if (avcodec_open2(*avCodecContext, dec, 0) != 0) { //avcodec_open2 该函数用于初始化一个视音频编解码器的AVCodecContext
+        if (LOG_DEBUG) {
+            LOGE("can not open audio streams");
+            callJava->CallError(CHILD_THREAD, 1006,"can not open audio streams");
+        }
+        exit = true;
+        pthread_mutex_unlock(&init_mutex);
+        return -1;
+    }
+    return 0;
 }

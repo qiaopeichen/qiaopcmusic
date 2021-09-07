@@ -10,6 +10,7 @@ add_library( # Sets the name of the library.
         src/main/cpp/MyQueue.cpp
         src/main/cpp/Playstatus.cpp
         src/main/cpp/MyAudio.cpp
+        src/main/cpp/MyVideo.cpp
         src/main/cpp/MyFFmepg.cpp
         src/main/cpp/CallJava.cpp
         src/main/cpp/Playstatus.cpp

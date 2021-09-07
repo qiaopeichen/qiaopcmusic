@@ -157,8 +157,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void begin(View view) {
-        qiaopcPlayer.setSource("http://mpge.5nd.com/2015/2015-11-26/69708/1.mp3");
-//        qiaopcPlayer.setSource("/mnt/shared/Other/Warriors.mp3");
+//        qiaopcPlayer.setSource("http://mpge.5nd.com/2015/2015-11-26/69708/1.mp3");
+        qiaopcPlayer.setSource("/storage/emulated/0/Download/csgo01.mp4");
 //        qiaopcPlayer.setSource("http://ngcdn001.cnr.cn/live/zgzs/index.m3u8");
         qiaopcPlayer.prepared();
     }
@@ -195,7 +195,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void next(View view) {
-        qiaopcPlayer.playNext("http://ngcdn001.cnr.cn/live/zgzs/index.m3u8");
+//        qiaopcPlayer.playNext("http://ngcdn001.cnr.cn/live/zgzs/index.m3u8");
+        qiaopcPlayer.setSource("/storage/emulated/0/Download/亮剑.mp4");
     }
 
     public void left(View view) {
