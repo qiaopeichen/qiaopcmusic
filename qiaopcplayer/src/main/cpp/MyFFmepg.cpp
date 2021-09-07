@@ -97,7 +97,15 @@ void MyFFmepg::decodeFFmpegThread() {
     }
 
     //回调java层
-    callJava->onCallPrepared(CHILD_THREAD);
+    if(callJava != NULL)
+    {
+        if(playstatus != NULL && !playstatus->exit)
+        {
+            callJava->onCallPrepared(CHILD_THREAD);
+        } else{
+            exit = true;
+        }
+    }
     pthread_mutex_unlock(&init_mutex);
 }
 
@@ -216,11 +224,18 @@ void MyFFmepg::release() {
     if (LOG_DEBUG) {
         LOGE("释放audio");
     }
-
     if (audio != NULL) {
         audio->release();
         delete(audio);
         audio = NULL;
+    }
+    if (LOG_DEBUG) {
+        LOGE("释放video");
+    }
+    if (video != NULL) {
+        video->release();
+        delete(video);
+        video = NULL;
     }
     if (LOG_DEBUG) {
         LOGE("释放pFormatCtx");
@@ -325,8 +340,8 @@ int MyFFmepg::getCodecContext(AVCodecParameters *codecpar, AVCodecContext **avCo
     if (!dec) {
         if (LOG_DEBUG) {
             LOGE("can not find decoder");
-            callJava->CallError(CHILD_THREAD, 1003,"can not find decoder");
         }
+        callJava->CallError(CHILD_THREAD, 1003,"can not find decoder");
         exit = true;
         pthread_mutex_unlock(&init_mutex);
         return -1;

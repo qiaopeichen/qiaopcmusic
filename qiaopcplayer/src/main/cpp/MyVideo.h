@@ -11,6 +11,7 @@
 
 extern "C" {
 #include "include/libavcodec/avcodec.h"
+#include <libavutil/time.h>
 
 };
 
@@ -29,6 +30,7 @@ public:
     MyVideo(Playstatus *playstatus, CallJava *callJava);
     ~MyVideo();
     void play();
+    void release();
 };
 
 
