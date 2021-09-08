@@ -163,4 +163,7 @@
             android:onClick="stop_record"
             android:text="停止录制" />
     </LinearLayout>
+    <com.example.myapplication.MyGLSurfaceView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </LinearLayout>
