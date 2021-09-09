@@ -17,7 +17,15 @@ public class MyRender implements GLSurfaceView.Renderer {
 
     //1 绘制坐标范围
     private final float[] vertexData = {
-            -1f,0f,
+//            -1f,0f,
+//            0f, -1f,
+//            0f, 1f,
+//            0f, 1f,
+//            0f, -1f,
+//            1f, 0f
+
+            -1f, 0f,
+            0f, -1f,
             0f, 1f,
             1f, 0f
     };
@@ -65,6 +73,6 @@ public class MyRender implements GLSurfaceView.Renderer {
 
         GLES20.glEnableVertexAttribArray(avPosition); //10使顶点属性数组有效
         GLES20.glVertexAttribPointer(avPosition, 2, GLES20.GL_FLOAT, false, 8, vertexBuffer); //11为顶点属性赋值
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3); //12 绘制图形
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4); //12 绘制图形
     }
 }
